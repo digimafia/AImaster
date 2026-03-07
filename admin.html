@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Masjid Donations</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f3f4f6; margin: 0; padding: 20px; }
+        .container { background: white; max-width: 900px; margin: 0 auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; }
+        h2 { color: #064e3b; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+        th { background-color: #064e3b; color: white; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; margin: 2px;}
+        .btn-confirm { background: #10b981; }
+        .btn-wa { background: #25D366; }
+        .badge-pending { background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight:bold;}
+        .badge-confirmed { background: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight:bold;}
+        #refreshBtn { background: #064e3b; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Admin Dashboard - Donations</h2>
+    <p>Verify funds in your bank account before clicking 'Confirm'.</p>
+    <button id="refreshBtn" onclick="loadData()">↻ Refresh List</button>
+    <span id="loadingTxt" style="display:none; color: #064e3b; margin-left: 10px;">Loading data from Google Sheets...</span>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // PASTE YOUR GOOGLE WEB APP URL HERE:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfRDzhY7J9k44OcKfxkoamLJBTOmEDSe5Lx3vu992PEoQhfGFM44jotYx0T6Wb9I0v/exec";
+
+    async function loadData() {
+        document.getElementById('loadingTxt').style.display = 'inline';
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getAll`);
+            const records = await response.json();
+            
+            records.reverse().forEach(row => {
+                const tr = document.createElement('tr');
+                const isPending = row.status === 'Pending';
+                
+                let actions = isPending 
+                    ? `<button class="btn btn-confirm" onclick="confirmPayment('${row.id}')">Confirm</button>`
+                    : `<button class="btn btn-wa" onclick="sendWhatsApp('${row.name}', '${row.mobile}', '${row.amount}')">Send WA Alert</button>`;
+
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${row.id}</td>
+                    <td>${row.name}</td>
+                    <td>${row.mobile}</td>
+                    <td>₹${row.amount}</td>
+                    <td><span class="${isPending ? 'badge-pending' : 'badge-confirmed'}">${row.status}</span></td>
+                    <td>${actions}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            alert("Error loading data.");
+        }
+        document.getElementById('loadingTxt').style.display = 'none';
+    }
+
+    async function confirmPayment(id) {
+        if(!confirm("Are you sure you received this payment?")) return;
+        
+        document.getElementById('loadingTxt').style.display = 'inline';
+        document.getElementById('loadingTxt').innerText = 'Updating status...';
+
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'update', id: id })
+        });
+
+        alert("Payment Confirmed!");
+        document.getElementById('loadingTxt').innerText = 'Loading data from Google Sheets...';
+        loadData(); // Refresh table
+    }
+
+    function sendWhatsApp(name, mobile, amount) {
+        const message = `As-salamu alaykum ${name},\n\nJazakAllah Khair for your donation of Rs. ${amount} to Masjid E Ibrahim.\n\nYour payment is CONFIRMED. Please visit our website and enter your mobile number to download your official PDF receipt.`;
+        window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // Load data when page opens
+    window.onload = loadData;
+</script>
+
+</body>
+</html>
