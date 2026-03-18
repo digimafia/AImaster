@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VeloDesk — Dealer Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4ff; --surface:#ffffff; --surface2:#f8faff; --border:#e2e8f4;
+  --accent:#6366f1; --accent2:#818cf8; --text:#1e293b; --muted:#64748b;
+  --green:#059669; --gbg:#ecfdf5; --red:#dc2626; --rbg:#fef2f2;
+  --blue:#2563eb; --bbg:#eff6ff; --orange:#ea580c; --obg:#fff7ed;
+  --purple:#7c3aed; --pbg:#f5f3ff; --teal:#0891b2; --tbg:#ecfeff;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;margin:0;overflow-x:hidden;}
+.fd{font-family:'Syne',sans-serif;}
+.sidebar{width:248px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;left:0;top:0;z-index:40;transition:transform .3s;display:flex;flex-direction:column;box-shadow:2px 0 12px rgba(99,102,241,.06);}
+.sidebar.closed{transform:translateX(-248px);}
+.main{margin-left:248px;min-height:100vh;transition:margin .3s;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;cursor:pointer;transition:all .15s;color:var(--muted);font-size:13.5px;font-weight:500;margin:1px 10px;}
+.nav-item:hover{background:#f1f0ff;color:var(--accent);}
+.nav-item.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.3);}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nsec{padding:6px 16px 3px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .15s;}
+.card:hover{box-shadow:0 4px 16px rgba(99,102,241,.08);}
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.bg{background:var(--gbg);color:var(--green);}
+.br{background:var(--rbg);color:var(--red);}
+.bb{background:var(--bbg);color:var(--blue);}
+.bo{background:var(--obg);color:var(--orange);}
+.bp{background:var(--pbg);color:var(--purple);}
+.bgy{background:#f1f5f9;color:var(--muted);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3);}
+.btn-p:hover{box-shadow:0 4px 16px rgba(99,102,241,.4);transform:translateY(-1px);}
+.btn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-s:hover{border-color:var(--accent);color:var(--accent);}
+.btn-g{background:transparent;color:var(--muted);}
+.btn-g:hover{color:var(--accent);background:#f1f0ff;}
+.btn-d{background:var(--rbg);color:var(--red);border:1px solid #fecaca;}
+.btn-d:hover{background:var(--red);color:#fff;}
+.btn-gr{background:var(--gbg);color:var(--green);border:1px solid #a7f3d0;}
+.btn-gr:hover{background:var(--green);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.inp{background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:13.5px;width:100%;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s;}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.inp option{background:var(--surface);}
+label{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px;}
+.mbg{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.mlg{max-width:800px;}.mxl{max-width:980px;}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);}
+.mb{padding:24px;}
+.mf{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);}
+table{width:100%;border-collapse:collapse;}
+th{background:#f8faff;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;border-bottom:1px solid var(--border);}
+td{padding:11px 14px;font-size:13px;border-top:1px solid #f1f5f9;vertical-align:middle;}
+tr:hover td{background:#fafbff;}
+.sc{border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;}
+.sc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.ci{background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;}
+.ce{background:linear-gradient(135deg,#059669,#34d399);color:#fff;}
+.cb{background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;}
+.co{background:linear-gradient(135deg,#ea580c,#fb923c);color:#fff;}
+.cp{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;}
+.ct{background:linear-gradient(135deg,#0891b2,#22d3ee);color:#fff;}
+.sv{font-size:24px;font-weight:800;font-family:'Syne',sans-serif;margin:6px 0 2px;}
+.sl{font-size:11px;font-weight:600;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
+.si{font-size:26px;margin-bottom:4px;}
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;border:1.5px solid;}
+.s1{color:#64748b;border-color:#cbd5e1;background:#f8fafc;}
+.s2{color:#d97706;border-color:#fcd34d;background:#fffbeb;}
+.s3{color:#2563eb;border-color:#93c5fd;background:#eff6ff;}
+.s4{color:#7c3aed;border-color:#c4b5fd;background:#f5f3ff;}
+.s5{color:#ea580c;border-color:#fdba74;background:#fff7ed;}
+.s6{color:#059669;border-color:#6ee7b7;background:#ecfdf5;}
+.s7{color:#0891b2;border-color:#67e8f9;background:#ecfeff;}
+.ti{position:relative;padding-left:24px;padding-bottom:16px;}
+.ti::before{content:'';position:absolute;left:7px;top:18px;width:1px;bottom:0;background:var(--border);}
+.ti:last-child::before{display:none;}
+.td{position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 2px var(--accent);}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.page{display:none;}.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page.active{animation:fadeIn .2s ease;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#global-loader{position:fixed;inset:0;background:linear-gradient(135deg,#6366f1,#818cf8);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:39;}
+.cdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+.cdot.on{background:#34d399;}.cdot.off{background:#f87171;}
+.stitle{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.ibox{background:var(--bbg);border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--blue);}
+.wbox{background:var(--obg);border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--orange);}
+.sbox{background:var(--gbg);border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--green);}
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:none;}
+#setup-banner{background:linear-gradient(135deg,#f97316,#fb923c);color:#fff;padding:10px 20px;font-size:13px;font-weight:600;text-align:center;display:none;}
+.scrollbar-thin::-webkit-scrollbar{width:4px;}.scrollbar-thin::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-248px);}.sidebar.open{transform:translateX(0);}
+  .main{margin-left:0!important;}#sidebar-overlay.show{display:block;}
+  .g2{grid-template-columns:1fr!important;}.g3{grid-template-columns:1fr!important;}
+}
+.pp{color:var(--green);font-weight:700;}.pn{color:var(--red);font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="global-loader">
+  <div style="width:52px;height:52px;background:rgba(255,255,255,.2);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+    <svg width="28" height="28" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div style="text-align:center;">
+    <div class="fd" style="font-size:24px;font-weight:800;color:#fff;">VeloDesk</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:4px;" id="loader-msg">Starting up...</div>
+  </div>
+  <div class="spinner"></div>
+  <button id="skip-btn" onclick="window._skipToOffline()" style="display:none;margin-top:8px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+    Use Offline Mode →
+  </button>
+</div>
+
+<div id="setup-banner">⚡ Offline Mode — Firebase not configured. Data stored locally only.
+  <button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,.25);border:none;color:#fff;padding:2px 10px;border-radius:4px;cursor:pointer;margin-left:10px;">×</button>
+</div>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar scrollbar-thin" id="sidebar" style="display:none;">
+  <div style="padding:18px 16px 14px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(99,102,241,.4);">
+        <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="fd" style="font-size:16px;font-weight:800;color:var(--text);">VeloDesk</div>
+        <div style="font-size:10px;color:var(--muted);display:flex;align-items:center;"><span class="cdot" id="conn-dot"></span><span id="conn-label">...</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:10px 0;" class="scrollbar-thin">
+    <div class="nsec">Main</div>
+    <div class="nav-item active" onclick="navigate('dashboard')" data-page="dashboard"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="nav-item" onclick="navigate('crm')" data-page="crm"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>CRM</div>
+    <div class="nav-item" onclick="navigate('inventory')" data-page="inventory"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Inventory</div>
+    <div class="nav-item" onclick="navigate('billing')" data-page="billing"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Billing</div>
+    <div class="nav-item" onclick="navigate('billsummary')" data-page="billsummary"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Bill Summary</div>
+    <div class="nav-item" onclick="navigate('accounts')" data-page="accounts"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Accounts</div>
+    <div class="nav-item" onclick="navigate('suppliers')" data-page="suppliers"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Suppliers</div>
+    <div class="nav-item" onclick="navigate('hr')" data-page="hr"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>HR</div>
+    <div class="nav-item" onclick="navigate('reports')" data-page="reports"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Reports</div>
+    <div class="nsec" id="nav-admin-sec">Admin</div>
+    <div class="nav-item" id="nav-branches" onclick="navigate('branches')" data-page="branches"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Branches</div>
+    <div class="nav-item" onclick="navigate('settings')" data-page="settings"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+  </div>
+  <div style="padding:12px 14px;border-top:1px solid var(--border);background:var(--surface2);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div id="user-avatar" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">A</div>
+      <div style="flex:1;min-width:0;">
+        <div id="user-name-display" style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Admin</div>
+        <div id="user-branch-display" style="font-size:10px;color:var(--muted);">All Branches</div>
+      </div>
+    </div>
+    <button class="btn btn-g" style="width:100%;justify-content:center;font-size:12px;padding:6px;" onclick="doLogout()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="main-content" style="display:none;">
+  <div class="topbar" id="topbar">
+    <button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--muted);border-radius:8px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="fd" style="flex:1;font-weight:700;font-size:15px;color:var(--text);" id="page-title">Dashboard</div>
+    <span id="topbar-branch" style="font-size:12px;color:var(--muted);background:var(--surface2);padding:4px 10px;border-radius:6px;border:1px solid var(--border);"></span>
+    <span id="topbar-date" style="font-size:12px;color:var(--muted);"></span>
+  </div>
+
+  <div style="padding:20px;">
+
+<!-- LOGIN -->
+<div id="login-page" style="display:none;align-items:center;justify-content:center;min-height:calc(100vh - 60px);">
+  <div style="width:100%;max-width:420px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 20px rgba(99,102,241,.4);">
+        <svg width="30" height="30" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="fd" style="font-size:28px;font-weight:800;color:var(--text);">VeloDesk</div>
+      <div style="color:var(--muted);font-size:14px;margin-top:4px;">Two Wheeler Dealer Management</div>
+    </div>
+    <div class="card" style="padding:28px;box-shadow:0 8px 32px rgba(99,102,241,.12);">
+      <!-- Tab switcher -->
+      <div style="display:flex;gap:0;margin-bottom:20px;background:var(--surface2);border-radius:10px;padding:3px;" id="login-tabs">
+        <button id="tab-fb" onclick="switchLoginTab('fb')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:all .15s;">Email Login</button>
+        <button id="tab-local" onclick="switchLoginTab('local')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;">Username Login</button>
+      </div>
+      <div id="fb-form">
+        <div style="margin-bottom:14px;"><label>Email Address</label><input type="email" id="login-email" class="inp" placeholder="admin@dealer.com" onkeydown="if(event.key==='Enter')doFirebaseLogin()"></div>
+        <div style="margin-bottom:14px;"><label>Password</label><input type="password" id="login-password" class="inp" placeholder="Password" onkeydown="if(event.key==='Enter')doFirebaseLogin()"></div>
+        <div style="margin-bottom:20px;"><label>Branch</label><select id="login-branch" class="inp"></select></div>
+        <button class="btn btn-p" style="width:100%;justify-content:center;padding:11px;font-size:14px;" onclick="doFirebaseLogin()" id="login-btn">Sign In →</button>
+      </div>
+      <div id="local-form" style="display:none;">
+        <div style="margin-bottom:14px;"><label>Username</label><input type="text" id="local-user" class="inp" placeholder="admin" onkeydown="if(event.key==='Enter')doLocalLogin()"></div>
+        <div style="margin-bottom:14px;"><label>Password</label><input type="password" id="local-pass" class="inp" placeholder="admin123" onkeydown="if(event.key==='Enter')doLocalLogin()"></div>
+        <div style="margin-bottom:20px;"><label>Branch</label><select id="local-branch" class="inp"></select></div>
+        <button class="btn btn-p" style="width:100%;justify-content:center;padding:11px;" onclick="doLocalLogin()">Sign In</button>
+      </div>
+      <div id="login-error" style="color:var(--red);font-size:12px;margin-top:10px;text-align:center;display:none;padding:8px;background:var(--rbg);border-radius:8px;"></div>
+    </div>
+    <div id="forgot-link" style="text-align:center;margin-top:12px;font-size:12px;">
+      <span style="cursor:pointer;color:var(--accent);" onclick="doForgotPassword()">Forgot password?</span>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div id="dash-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:20px;"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;" class="g2">
+    <div class="card"><div class="fd" style="font-size:13px;font-weight:700;margin-bottom:14px;">📈 Monthly Sales</div><canvas id="chart-monthly" height="180"></canvas></div>
+    <div class="card"><div class="fd" style="font-size:13px;font-weight:700;margin-bottom:14px;">🏢 Branch Performance</div><canvas id="chart-branch" height="180"></canvas></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="g2">
+    <div class="card"><div class="fd" style="font-size:13px;font-weight:700;margin-bottom:14px;">🏍 Brand Performance</div><canvas id="chart-brand" height="180"></canvas></div>
+    <div class="card"><div class="fd" style="font-size:13px;font-weight:700;margin-bottom:14px;">⚡ Recent Activity</div><div id="dash-activity" style="font-size:13px;color:var(--muted);">Loading...</div></div>
+  </div>
+</div>
+
+<!-- CRM -->
+<div class="page" id="page-crm">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    <input type="text" class="inp" placeholder="🔍 Search name or mobile..." style="max-width:260px;" id="crm-search" oninput="renderCRM()">
+    <select class="inp" style="max-width:180px;" id="crm-stage-filter" onchange="renderCRM()">
+      <option value="">All Stages</option>
+      <option value="1">Lead Created</option><option value="2">Quote Given</option><option value="3">Booked</option>
+      <option value="4">Bill Generated</option><option value="5">Delivered (No Reg)</option>
+      <option value="6">Delivered (With Reg)</option><option value="7">Number Plate Delivered</option>
+    </select>
+    <button class="btn btn-p" onclick="openCustomerModal()">+ Add Customer</button>
+    <span id="crm-count" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
+  </div>
+  <div class="tw"><table><thead><tr><th>Customer</th><th>Mobile</th><th>Requirement</th><th>Stage</th><th>Follow Up</th><th>Branch</th><th>Actions</th></tr></thead><tbody id="crm-body"></tbody></table></div>
+</div>
+
+<!-- INVENTORY -->
+<div class="page" id="page-inventory">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    <input type="text" class="inp" placeholder="🔍 Search chassis, model..." style="max-width:260px;" id="inv-search" oninput="renderInventory()">
+    <select class="inp" style="max-width:160px;" id="inv-brand-filter" onchange="renderInventory()"><option value="">All Brands</option></select>
+    <select class="inp" style="max-width:160px;" id="inv-status-filter" onchange="renderInventory()">
+      <option value="">All Status</option><option value="In Stock">In Stock</option><option value="Booked">Booked</option><option value="Sold">Sold</option>
+    </select>
+    <button class="btn btn-p" onclick="openStockModal()">+ Add Stock</button>
+    <span id="inv-count" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
+  </div>
+  <div id="inv-alert" style="display:none;" class="wbox" style="margin-bottom:14px;"></div>
+  <div class="tw"><table><thead><tr><th>Brand / Model</th><th>Color</th><th>Chassis No.</th><th>Engine No.</th><th>Supplier</th><th>Purchase ₹</th><th>Status</th><th>Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+</div>
+
+<!-- BILLING -->
+<div class="page" id="page-billing">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    <input type="text" class="inp" placeholder="🔍 Search bills..." style="max-width:280px;" id="bill-search" oninput="renderBills()">
+    <button class="btn btn-p" onclick="openBillingModal()">+ New Bill</button>
+    <span id="bill-count" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
+  </div>
+  <div class="tw"><table><thead><tr><th>Bill #</th><th>Customer</th><th>Vehicle</th><th>Total ₹</th><th>Cash Paid ₹</th><th>Balance ₹</th><th>Finance</th><th>Branch</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bill-body"></tbody></table></div>
+</div>
+
+<!-- BILL SUMMARY -->
+<div class="page" id="page-billsummary">
+  <div id="bs-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px;"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+    <input type="date" class="inp" style="max-width:160px;" id="bs-from">
+    <input type="date" class="inp" style="max-width:160px;" id="bs-to">
+    <select class="inp" style="max-width:180px;" id="bs-branch-filter" onchange="renderBillSummary()"><option value="">All Branches</option></select>
+    <button class="btn btn-s" onclick="renderBillSummary()">Filter</button>
+    <button class="btn btn-p" onclick="exportBSSummaryPDF()">⬇ Export PDF</button>
+    <span id="bs-count" style="margin-left:auto;font-size:12px;color:var(--muted);"></span>
+  </div>
+  <div class="tw"><table><thead><tr><th>Bill #</th><th>Date</th><th>Customer</th><th>Vehicle</th><th>Total ₹</th><th>Finance By</th><th>Cash Paid ₹</th><th>Manual Entry ₹</th><th>Balance ₹</th><th>Profit ₹</th><th>Branch</th><th>Staff</th></tr></thead><tbody id="bs-body"></tbody></table></div>
+</div>
+
+<!-- ACCOUNTS -->
+<div class="page" id="page-accounts">
+  <div id="acc-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px;"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+    <input type="date" class="inp" style="max-width:160px;" id="acc-from">
+    <input type="date" class="inp" style="max-width:160px;" id="acc-to">
+    <select class="inp" style="max-width:180px;" id="acc-type-filter" onchange="renderAccounts()">
+      <option value="">All Types</option><option value="income">Income</option><option value="expense">Expense</option><option value="bank">Bank</option>
+    </select>
+    <button class="btn btn-s" onclick="renderAccounts()">Filter</button>
+    <div id="acc-admin-btns" style="display:none;gap:8px;display:flex;">
+      <button class="btn btn-gr" onclick="openAccountModal('income')">+ Income</button>
+      <button class="btn btn-d" onclick="openAccountModal('expense')">+ Expense</button>
+      <button class="btn btn-s" onclick="openAccountModal('bank')">🏦 Bank Entry</button>
+    </div>
+  </div>
+  <div id="bank-sec" style="margin-bottom:14px;display:none;">
+    <div class="fd" style="font-size:13px;font-weight:700;margin-bottom:10px;">🏦 Bank Accounts</div>
+    <div id="bank-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;"></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount ₹</th><th>Bank</th><th>Branch</th><th id="acc-act-th">Actions</th></tr></thead><tbody id="acc-body"></tbody></table></div>
+</div>
+
+<!-- SUPPLIERS -->
+<div class="page" id="page-suppliers">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    <input type="text" class="inp" placeholder="🔍 Search suppliers..." style="max-width:280px;" id="sup-search" oninput="renderSuppliers()">
+    <button class="btn btn-p" onclick="openSupplierModal()">+ Add Supplier</button>
+    <button class="btn btn-s" onclick="syncSupplierOutstanding()">🔄 Sync Outstanding</button>
+  </div>
+  <div class="tw"><table><thead><tr><th>Name</th><th>Mobile</th><th>Address</th><th>GST</th><th>Stock Value ₹</th><th>Outstanding ₹</th><th>Paid ₹</th><th>Actions</th></tr></thead><tbody id="sup-body"></tbody></table></div>
+</div>
+
+<!-- HR -->
+<div class="page" id="page-hr">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    <input type="text" class="inp" placeholder="🔍 Search staff..." style="max-width:280px;" id="hr-search" oninput="renderHR()">
+    <button class="btn btn-p" onclick="openStaffModal()">+ Add Staff</button>
+  </div>
+  <div class="tw"><table><thead><tr><th>Name</th><th>Mobile</th><th>Designation</th><th>Branch</th><th>Salary ₹</th><th>Joining</th><th>Actions</th></tr></thead><tbody id="hr-body"></tbody></table></div>
+</div>
+
+<!-- REPORTS -->
+<div class="page" id="page-reports">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;">
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('sales')"><div style="font-size:30px;margin-bottom:8px;">📊</div><div style="font-weight:700;margin-bottom:4px;">Sales Report</div><div style="font-size:12px;color:var(--muted);">All sales with details</div></div>
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('stock')"><div style="font-size:30px;margin-bottom:8px;">📦</div><div style="font-weight:700;margin-bottom:4px;">Stock Report</div><div style="font-size:12px;color:var(--muted);">Current inventory</div></div>
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('customer')"><div style="font-size:30px;margin-bottom:8px;">👥</div><div style="font-weight:700;margin-bottom:4px;">Customer Report</div><div style="font-size:12px;color:var(--muted);">CRM pipeline</div></div>
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('expenses')"><div style="font-size:30px;margin-bottom:8px;">💸</div><div style="font-weight:700;margin-bottom:4px;">Expense Report</div><div style="font-size:12px;color:var(--muted);">All expenses</div></div>
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('branch')"><div style="font-size:30px;margin-bottom:8px;">🏢</div><div style="font-weight:700;margin-bottom:4px;">Branch Report</div><div style="font-size:12px;color:var(--muted);">Branch performance</div></div>
+    <div class="card" style="cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="generateReport('profit')"><div style="font-size:30px;margin-bottom:8px;">💰</div><div style="font-weight:700;margin-bottom:4px;">Profit Report</div><div style="font-size:12px;color:var(--muted);">Bill-wise profit</div></div>
+  </div>
+</div>
+
+<!-- BRANCHES -->
+<div class="page" id="page-branches">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;"><button class="btn btn-p" onclick="openBranchModal()">+ Add Branch</button></div>
+  <div class="tw"><table><thead><tr><th>Branch Name</th><th>Address</th><th>Manager</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="branch-body"></tbody></table></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;">
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">🏍 Brands</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" class="inp" id="new-brand" placeholder="Brand name"><button class="btn btn-p btn-sm" onclick="addSetting('brands','new-brand')">Add</button></div><div id="brands-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">📋 Models</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" class="inp" id="new-model" placeholder="Model name"><button class="btn btn-p btn-sm" onclick="addSetting('models','new-model')">Add</button></div><div id="models-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">🏦 Finance By</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" class="inp" id="new-finance" placeholder="Finance company"><button class="btn btn-p btn-sm" onclick="addSetting('financeBy','new-finance')">Add</button></div><div id="financeBy-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">💸 Expense Categories</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" class="inp" id="new-expense-cat" placeholder="Category"><button class="btn btn-p btn-sm" onclick="addSetting('expenseCategories','new-expense-cat')">Add</button></div><div id="expenseCategories-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">🏦 Bank Accounts</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" class="inp" id="new-bank" placeholder="Bank name"><button class="btn btn-p btn-sm" onclick="addSetting('banks','new-bank')">Add</button></div><div id="banks-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+    <div class="card"><div class="fd" style="font-weight:700;margin-bottom:12px;font-size:14px;">👤 System Users</div><button class="btn btn-p btn-sm" style="margin-bottom:10px;" onclick="openUserModal()">+ Add User</button><div id="users-list"></div></div>
+  </div>
+</div>
+
+  </div><!-- end pages wrapper -->
+</div><!-- end main -->
+
+<!-- ══ MODALS ══ -->
+<!-- Customer -->
+<div class="mbg" id="modal-customer" style="display:none;"><div class="modal mlg">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="cust-modal-title">Add Customer</div><button class="btn btn-g" onclick="closeModal('modal-customer')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="cust-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" class="g2">
+      <div><label>Full Name *</label><input class="inp" id="cust-name" placeholder="Customer name"></div>
+      <div><label>Mobile *</label><input class="inp" id="cust-mobile" placeholder="10-digit mobile"></div>
+      <div><label>Email</label><input class="inp" id="cust-email" type="email" placeholder="email@example.com"></div>
+      <div><label>Address</label><input class="inp" id="cust-address" placeholder="Full address"></div>
+    </div>
+    <div class="stitle">Vehicle Requirement</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" class="g2">
+      <div><label>Brand</label><input class="inp" id="cust-brand" list="brand-dl1" placeholder="Brand"><datalist id="brand-dl1"></datalist></div>
+      <div><label>Model</label><input class="inp" id="cust-model" list="model-dl1" placeholder="Model"><datalist id="model-dl1"></datalist></div>
+      <div><label>Variant</label><input class="inp" id="cust-variant" placeholder="Variant"></div>
+      <div><label>Color</label><input class="inp" id="cust-color" placeholder="Color"></div>
+      <div style="grid-column:1/-1;"><label>Notes</label><textarea class="inp" id="cust-notes" rows="2" placeholder="Notes..."></textarea></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;" class="g3">
+      <div><label>Pipeline Stage</label>
+        <select class="inp" id="cust-stage">
+          <option value="1">1 — Lead Created</option><option value="2">2 — Quote Given</option><option value="3">3 — Booked</option>
+          <option value="4">4 — Bill Generated</option><option value="5">5 — Delivered (No Reg)</option>
+          <option value="6">6 — Delivered (With Reg)</option><option value="7">7 — Number Plate Delivered</option>
+        </select>
+      </div>
+      <div><label>Follow Up Date</label><input type="date" class="inp" id="cust-followup"></div>
+      <div><label>Branch</label><select class="inp" id="cust-branch-sel"></select></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-customer')">Cancel</button><button class="btn btn-p" onclick="saveCustomer()">Save Customer</button></div>
+</div></div>
+
+<!-- Timeline -->
+<div class="mbg" id="modal-timeline" style="display:none;"><div class="modal">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="timeline-title">Timeline</div><button class="btn btn-g" onclick="closeModal('modal-timeline')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb" id="timeline-content"></div>
+</div></div>
+
+<!-- Stock -->
+<div class="mbg" id="modal-stock" style="display:none;"><div class="modal mlg">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="stock-modal-title">Add Stock</div><button class="btn btn-g" onclick="closeModal('modal-stock')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="stock-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="g2">
+      <div><label>Brand *</label><input class="inp" id="stock-brand" list="brand-dl2" placeholder="Brand"><datalist id="brand-dl2"></datalist></div>
+      <div><label>Model *</label><input class="inp" id="stock-model" list="model-dl2" placeholder="Model"><datalist id="model-dl2"></datalist></div>
+      <div><label>Color</label><input class="inp" id="stock-color" placeholder="Color"></div>
+      <div><label>Chassis Number *</label><input class="inp" id="stock-chassis" placeholder="Chassis number"></div>
+      <div><label>Engine Number</label><input class="inp" id="stock-engine" placeholder="Engine number"></div>
+      <div><label>Supplier</label><select class="inp" id="stock-supplier"><option value="">Select Supplier</option></select></div>
+      <div><label>Purchase Amount ₹</label><input type="number" class="inp" id="stock-purchase" placeholder="0" oninput="checkPurchaseNote()"></div>
+      <div><label>Status</label><select class="inp" id="stock-status"><option value="In Stock">In Stock</option><option value="Booked">Booked</option><option value="Sold">Sold</option></select></div>
+    </div>
+    <div id="purchase-note" class="ibox" style="margin-top:14px;display:none;font-size:12px;">💡 Saving this will auto-create an expense entry and update supplier outstanding.</div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-stock')">Cancel</button><button class="btn btn-p" onclick="saveStock()">Save Stock</button></div>
+</div></div>
+
+<!-- Billing -->
+<div class="mbg" id="modal-billing" style="display:none;"><div class="modal mxl">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="billing-title">Generate Bill</div><button class="btn btn-g" onclick="closeModal('modal-billing')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="bill-edit-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" class="g2">
+      <div><label>Customer *</label><select class="inp" id="bill-cust" onchange="fetchCustForBill()"><option value="">-- Select Customer --</option></select></div>
+      <div><label>Vehicle (Stock) *</label><select class="inp" id="bill-veh"><option value="">-- Select Vehicle --</option></select></div>
+    </div>
+    <div id="bill-cust-preview" class="ibox" style="margin-bottom:14px;font-size:13px;">Select a customer to see details</div>
+    <div class="stitle">Billing Details</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;" class="g3">
+      <div><label>Vehicle Price ₹ *</label><input type="number" class="inp" id="bill-price" placeholder="0" oninput="calcBill()"></div>
+      <div><label>Finance By</label><select class="inp" id="bill-finance" onchange="calcBill()"><option value="">No Finance</option></select></div>
+      <div><label>Accessories ₹</label><input type="number" class="inp" id="bill-acc" placeholder="0" oninput="calcBill()"></div>
+      <div><label>RTO Fees ₹</label><input type="number" class="inp" id="bill-rto" placeholder="0" oninput="calcBill()"></div>
+      <div><label>AFFI Amount ₹</label><input type="number" class="inp" id="bill-affi" placeholder="0" oninput="calcBill()"></div>
+      <div><label>Insurance ₹</label><input type="number" class="inp" id="bill-ins" placeholder="0" oninput="calcBill()"></div>
+      <div><label>Other Amount ₹</label><input type="number" class="inp" id="bill-other" placeholder="0" oninput="calcBill()"></div>
+      <div><label>Other Description</label><input class="inp" id="bill-other-desc" placeholder="Description"></div>
+    </div>
+    <div class="stitle">Payment</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" class="g2">
+      <div><label>Cash Paid ₹</label><input type="number" class="inp" id="bill-cash" placeholder="0" oninput="calcBill()"></div>
+      <div><label>Bill Date</label><input type="date" class="inp" id="bill-date"></div>
+    </div>
+    <div id="bill-calc" style="background:linear-gradient(135deg,#f8faff,#f1f0ff);border:1px solid #e0e7ff;border-radius:12px;padding:16px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" class="g3">
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Total Bill</div><div style="font-size:20px;font-weight:800;color:var(--accent);">₹0</div></div>
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Finance</div><div style="font-size:20px;font-weight:800;color:var(--blue);">₹0</div></div>
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Cash Paid</div><div style="font-size:20px;font-weight:800;color:var(--green);">₹0</div></div>
+        <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Balance</div><div style="font-size:20px;font-weight:800;color:var(--red);">₹0</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-billing')">Cancel</button><button class="btn btn-p" onclick="saveBill()" id="bill-save-btn">Generate Bill</button></div>
+</div></div>
+
+<!-- Invoice -->
+<div class="mbg" id="modal-invoice" style="display:none;"><div class="modal mxl">
+  <div class="mh">
+    <div class="fd" style="font-size:16px;font-weight:700;">Invoice</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-p btn-sm" onclick="printInvoice()">🖨 Print</button>
+      <button class="btn btn-s btn-sm" onclick="downloadInvoicePDF()">⬇ PDF</button>
+      <div id="inv-admin-actions" style="display:none;gap:6px;">
+        <button class="btn btn-s btn-sm" onclick="editCurrentBill()">✏️ Edit</button>
+        <button class="btn btn-d btn-sm" onclick="deleteCurrentBill()">🗑 Delete</button>
+      </div>
+      <button class="btn btn-g" onclick="closeModal('modal-invoice')" style="padding:6px;font-size:16px;">✕</button>
+    </div>
+  </div>
+  <div class="mb" id="invoice-content"></div>
+</div></div>
+
+<!-- Account -->
+<div class="mbg" id="modal-account" style="display:none;"><div class="modal">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="acc-modal-title">Add Entry</div><button class="btn btn-g" onclick="closeModal('modal-account')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="acc-id"><input type="hidden" id="acc-type-val">
+    <div style="display:grid;gap:14px;">
+      <div><label>Date *</label><input type="date" class="inp" id="acc-date"></div>
+      <div><label>Category *</label><select class="inp" id="acc-category"></select></div>
+      <div><label>Description</label><input class="inp" id="acc-desc" placeholder="Description..."></div>
+      <div><label>Amount ₹ *</label><input type="number" class="inp" id="acc-amount" placeholder="0"></div>
+      <div id="acc-bank-field" style="display:none;"><label>Bank Account</label><select class="inp" id="acc-bank-name"></select></div>
+      <div><label>Branch</label><select class="inp" id="acc-branch-sel"></select></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-account')">Cancel</button><button class="btn btn-p" onclick="saveAccount()">Save</button></div>
+</div></div>
+
+<!-- Supplier -->
+<div class="mbg" id="modal-supplier" style="display:none;"><div class="modal">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="sup-modal-title">Add Supplier</div><button class="btn btn-g" onclick="closeModal('modal-supplier')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="sup-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="g2">
+      <div><label>Name *</label><input class="inp" id="sup-name" placeholder="Supplier name"></div>
+      <div><label>Mobile</label><input class="inp" id="sup-mobile" placeholder="Mobile"></div>
+      <div style="grid-column:1/-1;"><label>Address</label><input class="inp" id="sup-address" placeholder="Address"></div>
+      <div><label>GST Number</label><input class="inp" id="sup-gst" placeholder="GST number"></div>
+      <div><label>Outstanding ₹</label><input type="number" class="inp" id="sup-outstanding" placeholder="0"></div>
+      <div><label>Total Paid ₹</label><input type="number" class="inp" id="sup-paid" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-supplier')">Cancel</button><button class="btn btn-p" onclick="saveSupplier()">Save</button></div>
+</div></div>
+
+<!-- Staff -->
+<div class="mbg" id="modal-staff" style="display:none;"><div class="modal mlg">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="staff-modal-title">Add Staff</div><button class="btn btn-g" onclick="closeModal('modal-staff')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="staff-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="g2">
+      <div><label>Name *</label><input class="inp" id="staff-name" placeholder="Full name"></div>
+      <div><label>Mobile</label><input class="inp" id="staff-mobile" placeholder="Mobile"></div>
+      <div><label>Designation</label><input class="inp" id="staff-desig" placeholder="Designation"></div>
+      <div><label>Branch *</label><select class="inp" id="staff-branch-sel"></select></div>
+      <div><label>Salary ₹</label><input type="number" class="inp" id="staff-salary" placeholder="0"></div>
+      <div><label>Joining Date</label><input type="date" class="inp" id="staff-joining"></div>
+      <div style="grid-column:1/-1;"><label>Notes</label><textarea class="inp" id="staff-notes" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-staff')">Cancel</button><button class="btn btn-p" onclick="saveStaff()">Save</button></div>
+</div></div>
+
+<!-- Branch -->
+<div class="mbg" id="modal-branch" style="display:none;"><div class="modal">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;" id="branch-modal-title">Add Branch</div><button class="btn btn-g" onclick="closeModal('modal-branch')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="branch-id">
+    <div style="display:grid;gap:14px;">
+      <div><label>Branch Name *</label><input class="inp" id="branch-name" placeholder="Branch name"></div>
+      <div><label>Address</label><input class="inp" id="branch-address" placeholder="Address"></div>
+      <div><label>Manager</label><input class="inp" id="branch-manager" placeholder="Manager name"></div>
+      <div><label>Phone</label><input class="inp" id="branch-phone" placeholder="Phone"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-branch')">Cancel</button><button class="btn btn-p" onclick="saveBranch()">Save</button></div>
+</div></div>
+
+<!-- User -->
+<div class="mbg" id="modal-user" style="display:none;"><div class="modal">
+  <div class="mh"><div class="fd" style="font-size:16px;font-weight:700;">Add User</div><button class="btn btn-g" onclick="closeModal('modal-user')" style="padding:6px;font-size:16px;">✕</button></div>
+  <div class="mb" id="user-modal-body"></div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('modal-user')">Cancel</button><button class="btn btn-p" onclick="saveUser()">Save User</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script type="module">
+// ── Firebase Config ──
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBPnEOKwZXAwgHY8fs-JoG3Le2IvA9J63M",
+  authDomain: "velodesk-client.firebaseapp.com",
+  projectId: "velodesk-client",
+  storageBucket: "velodesk-client.firebasestorage.app",
+  messagingSenderId: "152093407110",
+  appId: "1:152093407110:web:e3ad50ab4834a28ecc9e07"
+};
+
+// ── Globals ──
+let db = null, auth = null;
+window.currentUser = null;
+window._invoiceBillId = null;
+const FB = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n||0).toLocaleString('en-IN');
+const td = () => new Date().toISOString().slice(0,10);
+const isA = () => (window.currentUser?.role||'') === 'admin';
+const setMsg = t => { if($('loader-msg')) $('loader-msg').textContent = t; };
+const hideLoader = () => { if($('global-loader')) $('global-loader').style.display = 'none'; };
+
+// Show "Use Offline Mode" button after 3s in case Firebase is slow
+setTimeout(() => {
+  const sb = $('skip-btn');
+  if(sb && $('global-loader') && $('global-loader').style.display !== 'none') {
+    sb.style.display = 'block';
+  }
+}, 3000);
+
+// Skip to offline mode handler
+window._skipToOffline = () => {
+  fallbackToLocal();
+};
+
+// ── Helper: build tag using string concat (NO nested backticks) ──
+const h = (tag, attrs, inner) => '<' + tag + ' ' + attrs + '>' + inner + '</' + tag + '>';
+const btn = (cls, onclick, label) => '<button class="btn ' + cls + '" onclick="' + onclick + '">' + label + '</button>';
+const chip = (cls, txt) => '<span class="chip ' + cls + '">' + txt + '</span>';
+const badge = (cls, txt) => '<span class="badge ' + cls + '">' + txt + '</span>';
+
+// ── Stage helpers ──
+const SN = {1:'Lead Created',2:'Quote Given',3:'Booked',4:'Bill Generated',5:'Delivered (No Reg)',6:'Delivered (With Reg)',7:'Number Plate Delivered'};
+const SC = {1:'s1',2:'s2',3:'s3',4:'s4',5:'s5',6:'s6',7:'s7'};
+
+// ── Show / Hide UI ──
+async function showLogin() {
+  hideLoader();
+  $('sidebar').style.display = 'none';
+  $('main-content').style.display = 'block';
+  $('login-page').style.display = 'flex';
+  $('topbar').style.display = 'none';
+  if (!FB || !window._fb) {
+    switchLoginTab('local');
+    $('tab-fb').style.display = 'none';
+  } else {
+    switchLoginTab('fb');
+    $('tab-fb').style.display = '';
+  }
+  await populateLoginBranches();
+}
+
+window.switchLoginTab = (tab) => {
+  const fbForm=$('fb-form'), localForm=$('local-form');
+  const tabFb=$('tab-fb'), tabLocal=$('tab-local');
+  if(tab==='fb'){
+    fbForm.style.display='block'; localForm.style.display='none';
+    if(tabFb){ tabFb.style.background='var(--accent)'; tabFb.style.color='#fff'; }
+    if(tabLocal){ tabLocal.style.background='transparent'; tabLocal.style.color='var(--muted)'; }
+  } else {
+    fbForm.style.display='none'; localForm.style.display='block';
+    if(tabLocal){ tabLocal.style.background='var(--accent)'; tabLocal.style.color='#fff'; }
+    if(tabFb){ tabFb.style.background='transparent'; tabFb.style.color='var(--muted)'; }
+  }
+  // Reset error
+  const err=$('login-error'); if(err){ err.style.display='none'; err.textContent=''; }
+};
+
+async function showApp() {
+  hideLoader();
+  $('login-page').style.display = 'none';
+  $('sidebar').style.display = 'flex';
+  $('main-content').style.display = 'block';
+  $('topbar').style.display = 'flex';
+
+  const u = window.currentUser || {};
+  $('user-avatar').textContent = ((u.username||u.email||'A')[0]).toUpperCase();
+  $('user-name-display').textContent = u.username || u.email || 'Admin';
+  $('topbar-date').textContent = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  // Show/hide admin-only nav items
+  ['nav-branches','nav-admin-sec'].forEach(id => {
+    const el=$(id); if(el) el.style.display = isA() ? '' : 'none';
+  });
+  const ab=$('acc-admin-btns'); if(ab) ab.style.display = isA()?'flex':'none';
+  const ia=$('inv-admin-actions'); if(ia) ia.style.display = isA()?'flex':'none';
+
+  // Load branch name for display
+  try {
+    const branches = await DB.get('branches');
+    const bn = u.activeBranch
+      ? (branches.find(x=>x.id===u.activeBranch)||{name:'Branch'}).name
+      : 'All Branches';
+    $('user-branch-display').textContent = bn;
+    $('topbar-branch').textContent = bn;
+  } catch(e) {
+    $('user-branch-display').textContent = 'All Branches';
+    $('topbar-branch').textContent = 'All Branches';
+  }
+
+  navigate('dashboard');
+}
+
+async function fallbackToLocal() {
+  console.log('VeloDesk: running in offline/local mode');
+  setConnStatus(false);
+  $('setup-banner').style.display = 'block';
+  seedLocalData();
+  await showLogin();
+}
+
+function setConnStatus(online) {
+  const d=$('conn-dot'), l=$('conn-label');
+  if(d) d.className = 'cdot '+(online?'on':'off');
+  if(l) l.textContent = online ? 'Firebase Live' : 'Offline Mode';
+}
+
+async function populateLoginBranches() {
+  // Always read from localStorage first — it's always seeded by seedLocalData()
+  // This guarantees branches show even if Firestore is blocked
+  let branches = [];
+  try {
+    branches = JSON.parse(localStorage.getItem('vd_branches') || '[]');
+  } catch(e) {}
+
+  // If localStorage is empty for some reason, try Firestore
+  if (!branches.length && FB && db && window._fb) {
+    try {
+      const snap = await window._fb.getDocs(window._fb.col(db, 'branches'));
+      branches = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    } catch(e) {}
+  }
+
+  // Build options — always at least "All Branches"
+  const opts = '<option value="all">All Branches (Admin)</option>' +
+    branches.map(b => '<option value="' + b.id + '">' + b.name + '</option>').join('');
+
+  ['login-branch', 'local-branch'].forEach(id => {
+    const s = $(id); if (s) s.innerHTML = opts;
+  });
+}
+
+// ── Startup — localStorage-first, Firestore as sync ──
+async function startApp() {
+
+  // STEP 1: Seed localStorage ALWAYS — this is our primary data store
+  seedLocalData();
+
+  // STEP 2: If Firebase not configured → pure offline mode
+  if (!FB) {
+    fallbackToLocal();
+    return;
+  }
+
+  // STEP 3: Try to load Firebase SDK with timeout
+  setMsg('Connecting to Firebase...');
+
+  let fM_ref, auM_ref;
+
+  try {
+    const [aM, fM, auM] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js')
+    ]);
+
+    fM_ref  = fM;
+    auM_ref = auM;
+
+    const app = aM.initializeApp(FIREBASE_CONFIG);
+    db   = fM.getFirestore(app);
+    auth = auM.getAuth(app);
+
+    window._fb = {
+      db, auth,
+      col    : fM.collection,
+      doc    : fM.doc,
+      getDocs: fM.getDocs,
+      setDoc : fM.setDoc,
+      delDoc : fM.deleteDoc,
+      ts     : fM.serverTimestamp,
+      signIn : auM.signInWithEmailAndPassword,
+      signOut: auM.signOut,
+      resetPwd: auM.sendPasswordResetEmail
+    };
+
+    setConnStatus(true);
+    setMsg('Firebase ready ✓');
+
+  } catch(err) {
+    console.warn('Firebase SDK failed, going offline:', err.message);
+    fallbackToLocal();
+    return;
+  }
+
+  // STEP 4: Check auth session — with 5s timeout
+  setMsg('Checking session...');
+  let currentFirebaseUser = null;
+
+  try {
+    currentFirebaseUser = await new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(null), 5000);
+      const unsub = auM_ref.onAuthStateChanged(auth, (u) => {
+        unsub();
+        clearTimeout(timer);
+        resolve(u);
+      });
+    });
+  } catch(e) {
+    console.warn('Auth check failed:', e.message);
+  }
+
+  // STEP 5: Try to seed/sync Firestore in background (non-blocking)
+  // We do this AFTER showing the UI so user is never stuck
+  syncFirestoreInBackground(fM_ref).catch(e => console.warn('BG sync:', e.message));
+
+  // STEP 6: Handle auth result
+  if (currentFirebaseUser) {
+    setMsg('Welcome back!');
+
+    // Build user profile — try Firestore, fall back to localStorage profile
+    let profile = { role: 'admin', branch: null };
+
+    // First check localStorage users (always available)
+    const localUsers = JSON.parse(localStorage.getItem('vd_users') || '[]');
+    const localProfile = localUsers.find(u => u.email === currentFirebaseUser.email);
+    if (localProfile) profile = localProfile;
+
+    // Try Firestore users (may fail if rules block it — that's OK)
+    try {
+      const snap = await fM_ref.getDocs(fM_ref.collection(db, 'users'));
+      const found = snap.docs.map(d => ({id:d.id, ...d.data()}))
+                        .find(u => u.email === currentFirebaseUser.email);
+      if (found) profile = { ...profile, ...found };
+    } catch(e) {
+      console.warn('Profile load from Firestore failed (using local):', e.message);
+    }
+
+    window.currentUser = {
+      uid         : currentFirebaseUser.uid,
+      email       : currentFirebaseUser.email,
+      username    : profile.displayName || profile.username || currentFirebaseUser.email.split('@')[0],
+      role        : profile.role || 'admin',
+      activeBranch: profile.branch || null
+    };
+
+    await showApp();
+
+  } else {
+    // No existing session — show login
+    await showLogin();
+  }
+}
+
+// ── Background Firestore sync — never blocks the UI ──
+async function syncFirestoreInBackground(fM) {
+  if (!fM || !db) return;
+
+  // Try to seed branches into Firestore if empty
+  // This may fail if Firestore rules block unauthenticated access — that's OK
+  try {
+    const snap = await fM.getDocs(fM.collection(db, 'branches'));
+    if (snap.empty) {
+      await seedFirestore(fM);
+      console.log('✅ Firestore seeded');
+    }
+  } catch(e) {
+    // Firestore rules likely blocking — this is the most common issue
+    // The app still works fully from localStorage
+    console.warn('Firestore seed blocked (check Rules):', e.message);
+    setMsg('Firebase connected (localStorage mode)');
+  }
+}
+
+// ── Seed Firestore with default data (only on first use) ──
+async function seedFirestore(fM) {
+  const set = async (col, id, data) => {
+    try { await fM.setDoc(fM.doc(db, col, id), {...data, id}); } catch(e){}
+  };
+  const uid = () => 'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+  const t = new Date().toISOString().slice(0,10);
+
+  await set('branches','br1',{name:'Branch 1 - Main',address:'Main Road',manager:'Admin',phone:'9000000001'});
+  await set('branches','br2',{name:'Branch 2 - North',address:'North Area',manager:'Staff A',phone:'9000000002'});
+  await set('branches','br3',{name:'Branch 3 - South',address:'South Area',manager:'Staff B',phone:'9000000003'});
+
+  await set('suppliers','sp1',{name:'Honda Motors Ltd',mobile:'9111111111',address:'Industrial Area',gst:'29ABCDE1234F1Z5',outstanding:65000,paid:0});
+  await set('suppliers','sp2',{name:'Hero Moto Corp',mobile:'9222222222',address:'North Zone',gst:'29FGHIJ5678K2Z3',outstanding:68000,paid:0});
+
+  const i1=uid(), i2=uid(), i3=uid();
+  await set('inventory',i1,{brand:'Honda',model:'Activa 6G',color:'Pearl Black',chassis:'ME4JF508XL7012301',engine:'JF50ETBL012301',supplier:'sp1',purchase:65000,status:'In Stock',date:t});
+  await set('inventory',i2,{brand:'Hero',model:'Splendor Plus',color:'Black',chassis:'MBLHA10EUKM123456',engine:'HA10EUKM123456',supplier:'sp2',purchase:68000,status:'In Stock',date:t});
+  await set('inventory',i3,{brand:'TVS',model:'Jupiter',color:'White',chassis:'MD621BJ52P2C12345',engine:'2P2C12345',supplier:'',purchase:74000,status:'In Stock',date:t});
+
+  const c1=uid(), c2=uid();
+  await set('customers',c1,{name:'Rajesh Kumar',mobile:'9876543210',email:'rajesh@email.com',address:'MG Road',brand:'Honda',model:'Activa 6G',variant:'STD',color:'Black',notes:'Wants EMI',stage:'3',followup:t,branch:'br1',createdAt:new Date().toISOString(),history:[{date:new Date().toISOString(),action:'Lead Created',by:'admin'}]});
+  await set('customers',c2,{name:'Priya Sharma',mobile:'9876543211',email:'',address:'Park St',brand:'TVS',model:'Jupiter',variant:'',color:'White',notes:'',stage:'2',followup:'',branch:'br2',createdAt:new Date().toISOString(),history:[{date:new Date().toISOString(),action:'Lead Created',by:'admin'}]});
+
+  const a1=uid(), a2=uid();
+  await set('accounts',a1,{date:t,type:'income',category:'Customer Payment',desc:'Opening balance',amount:100000,branch:'br1',by:'admin'});
+  await set('accounts',a2,{date:t,type:'expense',category:'Rent',desc:'Monthly rent',amount:25000,branch:'br1',by:'admin'});
+
+  await set('staff','st1',{name:'Amit Singh',mobile:'9000000010',designation:'Sales Executive',branch:'br1',salary:18000,joining:'2023-01-15',notes:'Good performer'});
+  await set('staff','st2',{name:'Sunita Devi',mobile:'9000000011',designation:'Accountant',branch:'br1',salary:20000,joining:'2022-06-01',notes:''});
+
+  console.log('✅ Firestore seeded with default data');
+}
+// ── Data Layer — defined BEFORE startApp() is called ──
+window.DB = {
+  get: async col => {
+    if(FB && db && window._fb) {
+      try { const s = await window._fb.getDocs(window._fb.col(db,col)); return s.docs.map(d=>({id:d.id,...d.data()})); }
+      catch(e){}
+    }
+    try { return JSON.parse(localStorage.getItem('vd_'+col))||[]; } catch{return [];}
+  },
+  save: async (col,id,data) => {
+    const p = {...data,id,updatedAt:new Date().toISOString()};
+    if(FB && db && window._fb) {
+      try { await window._fb.setDoc(window._fb.doc(db,col,id),p,{merge:true}); return; } catch(e){}
+    }
+    const arr = DB._loc(col); const i = arr.findIndex(x=>x.id===id);
+    if(i>=0) arr[i]=p; else arr.push(p);
+    localStorage.setItem('vd_'+col, JSON.stringify(arr));
+  },
+  del: async (col,id) => {
+    if(FB && db && window._fb) {
+      try { await window._fb.delDoc(window._fb.doc(db,col,id)); return; } catch(e){}
+    }
+    localStorage.setItem('vd_'+col, JSON.stringify(DB._loc(col).filter(x=>x.id!==id)));
+  },
+  gs: k => { try{return JSON.parse(localStorage.getItem('vd_s_'+k))||[];}catch{return[];} },
+  ss: (k,v) => localStorage.setItem('vd_s_'+k, JSON.stringify(v)),
+  uid: () => 'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
+  _loc: col => { try{return JSON.parse(localStorage.getItem('vd_'+col))||[];}catch{return[];} }
+};
+
+// ── Auth ──
+window.doFirebaseLogin = async () => {
+  const email     = ($('login-email')?.value || '').trim();
+  const pwd       = $('login-password')?.value || '';
+  const selBranch = $('login-branch')?.value || 'all';
+
+  // Basic validation
+  if (!email)      { showLoginErr('Please enter your email address'); return; }
+  if (!pwd)        { showLoginErr('Please enter your password'); return; }
+
+  // Guard: Firebase must be ready
+  if (!window._fb || !auth) {
+    showLoginErr('Firebase not ready yet — please wait 3 seconds and try again, or use Username Login tab');
+    return;
+  }
+
+  const loginBtn = $('login-btn');
+  if (loginBtn) { loginBtn.textContent = 'Signing in...'; loginBtn.disabled = true; }
+
+  try {
+    // Firebase Auth sign-in
+    const cred = await window._fb.signIn(auth, email, pwd);
+
+    // Build user profile
+    let profile = { role: 'admin', branch: null };
+
+    // 1. Check localStorage users
+    try {
+      const localUsers = JSON.parse(localStorage.getItem('vd_users') || '[]');
+      const lp = localUsers.find(u => u.email === email);
+      if (lp) profile = { ...profile, ...lp };
+    } catch(e) {}
+
+    // 2. Try Firestore users (non-blocking enhancement)
+    try {
+      const snap = await window._fb.getDocs(window._fb.col(db, 'users'));
+      const fp = snap.docs.map(d => ({id:d.id,...d.data()})).find(u => u.email === email);
+      if (fp) profile = { ...profile, ...fp };
+    } catch(e) {}
+
+    // Set current user
+    const activeBranch = profile.branch || (selBranch === 'all' ? null : selBranch) || null;
+    window.currentUser = {
+      uid         : cred.user.uid,
+      email,
+      username    : profile.displayName || profile.username || email.split('@')[0],
+      role        : profile.role || 'admin',
+      activeBranch
+    };
+
+    await showApp();
+
+  } catch(e) {
+    if (loginBtn) { loginBtn.textContent = 'Sign In →'; loginBtn.disabled = false; }
+
+    // Show exact Firebase error code + message so we can debug
+    const knownErrors = {
+      'auth/user-not-found'        : 'No account with this email. Create user in Firebase Console → Authentication → Users.',
+      'auth/wrong-password'        : 'Wrong password. Try again.',
+      'auth/invalid-email'         : 'Invalid email format.',
+      'auth/invalid-credential'    : 'Wrong email or password.',
+      'auth/too-many-requests'     : 'Too many failed attempts. Wait 5 minutes.',
+      'auth/network-request-failed': 'No internet. Check your connection.',
+      'auth/user-disabled'         : 'Account disabled.',
+      'auth/operation-not-allowed' : 'Email/Password login not enabled in Firebase Console → Authentication → Sign-in method.',
+      'auth/email-already-in-use'  : 'Email already used.'
+    };
+    const msg = knownErrors[e.code] || ('Firebase error [' + (e.code||'unknown') + ']: ' + e.message);
+    showLoginErr(msg);
+  }
+};
+
+window.doLocalLogin = async () => {
+  const u=$('local-user').value.trim();
+  const p=$('local-pass').value;
+  const b=$('local-branch').value;
+  if(!u||!p){showLoginErr('Username and Password required');return;}
+  // Check localStorage first (works offline)
+  let users = JSON.parse(localStorage.getItem('vd_users')||'[]');
+  // Also check Firestore if available (for users created via Settings)
+  if(FB && db && window._fb){
+    try{
+      const snap = await window._fb.getDocs(window._fb.col(db,'users'));
+      const fbUsers = snap.docs.map(d=>({id:d.id,...d.data()}));
+      // Merge: prefer Firestore users, keep local ones not in Firestore
+      fbUsers.forEach(fu=>{ if(!users.find(x=>x.id===fu.id)) users.push(fu); else { const i=users.findIndex(x=>x.id===fu.id); users[i]={...users[i],...fu}; }});
+    }catch(e){}
+  }
+  const user = users.find(x=>(x.username===u||x.email===u)&&x.password===p);
+  if(!user){showLoginErr('Invalid username or password');return;}
+  window.currentUser = {...user, activeBranch:(b==='all'?null:b)};
+  showApp();
+};
+
+window.doLogout = async () => {
+  if(auth&&window._fb){try{await window._fb.signOut(auth);}catch(e){}}
+  window.currentUser = null;
+  await showLogin();
+};
+
+window.doForgotPassword = async () => {
+  const email=$('login-email').value.trim();
+  if(!email){showLoginErr('Enter your email first');return;}
+  try{await window._fb.resetPwd(auth,email);showLoginErr('✓ Reset email sent!');}
+  catch(e){showLoginErr('Error: '+e.message);}
+};
+
+function showLoginErr(msg){const el=$('login-error');el.textContent=msg;el.style.display='block';}
+
+// ── Start app only after DB and all helpers are defined ──
+startApp();
+
+// ── Navigation ──
+const PT = {dashboard:'Dashboard',crm:'CRM — Customers',inventory:'Inventory',billing:'Billing',billsummary:'Bill Summary',accounts:'Accounts',suppliers:'Suppliers',hr:'HR',reports:'Reports',branches:'Branches',settings:'Settings'};
+
+window.navigate = page => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector('[data-page="'+page+'"]')?.classList.add('active');
+  $('page-title').textContent = PT[page]||page;
+  closeSidebarMobile();
+  ({dashboard:renderDashboard,crm:renderCRM,inventory:renderInventory,billing:renderBills,billsummary:renderBillSummary,accounts:renderAccounts,suppliers:renderSuppliers,hr:renderHR,branches:renderBranches,settings:renderSettings})[page]?.();
+};
+
+window.toggleSidebar=()=>{const sb=$('sidebar'),ov=$('sidebar-overlay');if(window.innerWidth<768){sb.classList.toggle('open');ov.classList.toggle('show');}else{const m=$('main-content');sb.classList.toggle('closed');m.style.marginLeft=sb.classList.contains('closed')?'0':'248px';}};
+window.closeSidebar=()=>{$('sidebar').classList.remove('open');$('sidebar-overlay').classList.remove('show');};
+function closeSidebarMobile(){if(window.innerWidth<768)window.closeSidebar();}
+window.closeModal=id=>$(id).style.display='none';
+document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)window.closeModal(bg.id);}));
+
+window.showToast=(msg,type='success')=>{
+  const t=$('toast');
+  const c={success:'#059669',error:'#dc2626',info:'#2563eb',warning:'#ea580c'};
+  t.innerHTML='<div style="background:'+(c[type]||c.success)+';color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.2);">'+msg+'</div>';
+  t.style.display='block';setTimeout(()=>t.style.display='none',3200);
+};
+
+// ── Dashboard ──
+let charts={};
+async function renderDashboard(){
+  const [inv,custs,bills,acc,branches]=await Promise.all([DB.get('inventory'),DB.get('customers'),DB.get('bills'),DB.get('accounts'),DB.get('branches')]);
+  let bD=bills,cD=custs;
+  if(window.currentUser?.activeBranch){bD=bills.filter(x=>x.branch===window.currentUser.activeBranch);cD=custs.filter(x=>x.branch===window.currentUser.activeBranch);}
+  const sold=inv.filter(x=>x.status==='Sold').length;
+  const inStock=inv.filter(x=>x.status==='In Stock').length;
+  const revenue=bD.reduce((s,b)=>s+Number(b.total||0),0);
+  const income=acc.filter(x=>x.type==='income').reduce((s,a)=>s+Number(a.amount||0),0);
+  const expense=acc.filter(x=>x.type==='expense').reduce((s,a)=>s+Number(a.amount||0),0);
+  const profit=bD.reduce((s,b)=>s+Number(b.profit||0),0);
+  $('dash-stats').innerHTML=[
+    {l:'Total Sold',v:sold,i:'🏍',c:'ci'},{l:'In Stock',v:inStock,i:'📦',c:'cb'},
+    {l:'Customers',v:cD.length,i:'👥',c:'cp'},{l:'Revenue',v:'₹'+fmt(revenue),i:'💰',c:'ce'},
+    {l:'Net Cash',v:'₹'+fmt(income-expense),i:'📊',c:'ct'},{l:'Total Profit',v:'₹'+fmt(profit),i:'📈',c:'co'}
+  ].map(s=>'<div class="sc '+s.c+'"><div class="si">'+s.i+'</div><div class="sv">'+s.v+'</div><div class="sl">'+s.l+'</div></div>').join('');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ms=new Array(12).fill(0);
+  bD.forEach(b=>{if(b.date){const m=new Date(b.date).getMonth();ms[m]++;}});
+  mkChart('chart-monthly','bar',months,ms,'Sales','rgba(99,102,241,.8)');
+  mkChart('chart-branch','doughnut',branches.map(b=>b.name.slice(0,14)),branches.map(br=>bD.filter(b=>b.branch===br.id).length),'Sales',['rgba(99,102,241,.8)','rgba(59,130,246,.8)','rgba(5,150,105,.8)','rgba(234,88,12,.8)']);
+  const bm={};bD.forEach(b=>{if(b.vehicleBrand)bm[b.vehicleBrand]=(bm[b.vehicleBrand]||0)+1;});
+  mkChart('chart-brand','bar',Object.keys(bm).length?Object.keys(bm):['No Data'],Object.values(bm).length?Object.values(bm):[0],'Brand','rgba(8,145,178,.8)');
+  const acts = bD.slice(-4).reverse().map(b=>'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">'+badge('bg','Bill')+'<span style="font-size:12px;">'+(b.customerName||'')+' — '+(b.vehicleName||'')+' — <b>₹'+fmt(b.total)+'</b></span></div>')
+    .concat(cD.slice(-3).reverse().map(c=>'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">'+badge('bb','Lead')+'<span style="font-size:12px;">'+c.name+' — '+(c.brand||'')+' '+(c.model||'')+'</span></div>'));
+  $('dash-activity').innerHTML = acts.slice(0,6).join('') || '<span style="color:var(--muted);">No recent activity</span>';
+}
+
+function mkChart(id,type,labels,data,label,color){
+  const canvas=$(id);if(!canvas)return;
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(canvas,{type,data:{labels,datasets:[{label,data,backgroundColor:color,borderColor:Array.isArray(color)?color.map(c=>c.replace('.8','1')):color.replace('.8','1'),borderWidth:1,borderRadius:type==='bar'?5:0}]},options:{responsive:true,plugins:{legend:{display:type==='doughnut',labels:{color:'#64748b',font:{size:11}}}},scales:type!=='doughnut'?{x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(99,102,241,.06)'}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(99,102,241,.06)'}}}:{}}});
+}
+
+// ── CRM ──
+async function renderCRM(){
+  const search=($('crm-search').value||'').toLowerCase();
+  const stageF=$('crm-stage-filter').value;
+  let data=await DB.get('customers');
+  if(window.currentUser?.activeBranch) data=data.filter(x=>x.branch===window.currentUser.activeBranch);
+  if(search) data=data.filter(x=>(x.name||'').toLowerCase().includes(search)||(x.mobile||'').includes(search));
+  if(stageF) data=data.filter(x=>x.stage===stageF);
+  $('crm-count').textContent=data.length+' customers';
+  const branches=await DB.get('branches');
+  // Build rows using string concat — NO nested backticks
+  const rows = data.map(c => {
+    const stageOpts = [1,2,3,4,5,6,7].map(s => '<option value="'+s+'" '+(c.stage==s?'selected':'')+'>'+s+'. '+SN[s]+'</option>').join('');
+    const brName = (branches.find(b=>b.id===c.branch)||{name:c.branch||'—'}).name;
+    const fuColor = c.followup&&new Date(c.followup)<new Date() ? 'var(--red)' : 'var(--muted)';
+    return '<tr>'
+      +'<td><div style="font-weight:600;">'+c.name+'</div><div style="font-size:11px;color:var(--muted);">'+(c.email||'')+'</div></td>'
+      +'<td><a href="tel:'+c.mobile+'" style="color:var(--accent);">'+c.mobile+'</a></td>'
+      +'<td><div style="font-weight:500;">'+(c.brand||'')+' '+(c.model||'')+'</div><div style="font-size:11px;color:var(--muted);">'+(c.variant||'')+' '+(c.color||'')+'</div></td>'
+      +'<td><select class="inp" style="font-size:11px;padding:4px 8px;min-width:160px;" onchange="quickStageChange(\''+c.id+'\',this.value)">'+stageOpts+'</select></td>'
+      +'<td style="font-size:12px;color:'+fuColor+';">'+(c.followup||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);">'+brName+'</td>'
+      +'<td><div style="display:flex;gap:4px;">'
+        +btn('btn-g btn-sm',"showTimeline('"+c.id+"')",'📋')
+        +btn('btn-g btn-sm',"editCustomer('"+c.id+"')",'✏️')
+        +btn('btn-d btn-sm',"deleteCustomer('"+c.id+"')",'🗑')
+      +'</div></td></tr>';
+  });
+  $('crm-body').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">No customers found</td></tr>';
+}
+
+window.quickStageChange = async (id, newStage) => {
+  const data = await DB.get('customers');
+  const c = data.find(x=>x.id===id); if(!c) return;
+  const history = [...(c.history||[]), {date:new Date().toISOString(), action:'Stage → '+SN[newStage], by:window.currentUser?.username||''}];
+  await DB.save('customers', id, {...c, stage:newStage, history});
+  showToast('Stage updated: '+SN[newStage]);
+};
+
+window.openCustomerModal = async () => {
+  $('cust-id').value = '';
+  ['cust-name','cust-mobile','cust-email','cust-address','cust-brand','cust-model','cust-variant','cust-color','cust-notes','cust-followup'].forEach(id=>$(id).value='');
+  $('cust-stage').value = '1';
+  $('cust-modal-title').textContent = 'Add Customer';
+  fillDl('brand-dl1', DB.gs('brands'));
+  fillDl('model-dl1', DB.gs('models'));
+  const branches = await DB.get('branches');
+  const sel = $('cust-branch-sel');
+  const userBr = window.currentUser?.activeBranch;
+  sel.innerHTML = branches.map(b=>'<option value="'+b.id+'" '+(b.id===userBr?'selected':'')+'>'+b.name+'</option>').join('');
+  sel.disabled = (!isA() && !!userBr);
+  $('modal-customer').style.display = 'flex';
+};
+
+window.editCustomer = async id => {
+  const c = (await DB.get('customers')).find(x=>x.id===id); if(!c) return;
+  $('cust-id').value = id;
+  ['name','mobile','email','address','brand','model','variant','color','notes','followup','stage'].forEach(f=>{const el=$('cust-'+f);if(el)el.value=c[f]||'';});
+  $('cust-modal-title').textContent = 'Edit Customer';
+  fillDl('brand-dl1', DB.gs('brands'));
+  fillDl('model-dl1', DB.gs('models'));
+  const branches = await DB.get('branches');
+  const sel = $('cust-branch-sel');
+  sel.innerHTML = branches.map(b=>'<option value="'+b.id+'" '+(b.id===c.branch?'selected':'')+'>'+b.name+'</option>').join('');
+  sel.disabled = (!isA() && !!window.currentUser?.activeBranch);
+  $('modal-customer').style.display = 'flex';
+};
+
+window.saveCustomer = async () => {
+  const name = $('cust-name').value.trim();
+  const mobile = $('cust-mobile').value.trim();
+  if(!name||!mobile){showToast('Name and Mobile required','error');return;}
+  const id = $('cust-id').value || DB.uid();
+  const existing = (await DB.get('customers')).find(x=>x.id===id);
+  const newStage = $('cust-stage').value;
+  const history = existing ? [...(existing.history||[])] : [{date:new Date().toISOString(),action:'Lead Created',by:window.currentUser?.username||''}];
+  if(existing&&existing.stage!==newStage) history.push({date:new Date().toISOString(),action:'Stage → '+SN[newStage],by:window.currentUser?.username||''});
+  const branch = $('cust-branch-sel').value || window.currentUser?.activeBranch || 'br1';
+  await DB.save('customers',id,{id,name,mobile,email:$('cust-email').value,address:$('cust-address').value,brand:$('cust-brand').value,model:$('cust-model').value,variant:$('cust-variant').value,color:$('cust-color').value,notes:$('cust-notes').value,stage:newStage,followup:$('cust-followup').value,branch,createdAt:existing?.createdAt||new Date().toISOString(),history});
+  closeModal('modal-customer');showToast('Customer saved!');renderCRM();
+};
+
+window.deleteCustomer = async id => {if(!confirm('Delete customer?'))return;await DB.del('customers',id);showToast('Deleted');renderCRM();};
+
+window.showTimeline = async id => {
+  const c = (await DB.get('customers')).find(x=>x.id===id); if(!c) return;
+  $('timeline-title').textContent = c.name + ' — Timeline';
+  const notes = c.notes ? '<div style="color:var(--muted);">📝 '+c.notes+'</div>' : '';
+  const hist = (c.history||[]).map(ev=>
+    '<div class="ti"><div class="td"></div>'
+    +'<div style="font-size:11px;color:var(--muted);">'+new Date(ev.date).toLocaleString('en-IN')+'</div>'
+    +'<div style="font-size:13px;font-weight:600;">'+ev.action+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);">by '+ev.by+'</div></div>'
+  ).join('');
+  $('timeline-content').innerHTML = '<div style="margin-bottom:16px;font-size:13px;background:var(--surface2);padding:12px;border-radius:8px;"><div><b>📱 Mobile:</b> '+c.mobile+'</div><div><b>🏍 Wants:</b> '+(c.brand||'')+' '+(c.model||'')+' '+(c.variant||'')+' '+(c.color||'')+'</div>'+notes+'</div>'+hist;
+  $('modal-timeline').style.display = 'flex';
+};
+
+// ── Inventory ──
+async function renderInventory(){
+  const search=($('inv-search').value||'').toLowerCase();
+  const brandF=$('inv-brand-filter').value;
+  const statusF=$('inv-status-filter').value;
+  let data = await DB.get('inventory');
+  const allBrands=[...new Set(data.map(x=>x.brand))];
+  const bf=$('inv-brand-filter'); const cb=bf.value;
+  bf.innerHTML='<option value="">All Brands</option>'+allBrands.map(b=>'<option value="'+b+'" '+(b===cb?'selected':'')+'>'+b+'</option>').join('');
+  if(search) data=data.filter(x=>(x.chassis||'').toLowerCase().includes(search)||(x.model||'').toLowerCase().includes(search)||(x.brand||'').toLowerCase().includes(search));
+  if(brandF) data=data.filter(x=>x.brand===brandF);
+  if(statusF) data=data.filter(x=>x.status===statusF);
+  const low=[...new Set(data.filter(x=>x.status==='In Stock').map(x=>x.brand))].filter(b=>data.filter(x=>x.brand===b&&x.status==='In Stock').length<=2);
+  const al=$('inv-alert');
+  if(low.length){al.style.display='block';al.textContent='⚠️ Low stock: '+low.join(', ');}else al.style.display='none';
+  $('inv-count').textContent=data.length+' items';
+  const sups=await DB.get('suppliers');
+  const stBadge = s => ({  'In Stock':'bg','Booked':'bb','Sold':'bgy'}[s]||'bgy');
+  const rows = data.map(i => {
+    const supName = (sups.find(s=>s.id===i.supplier)||{name:i.supplier||'—'}).name;
+    const billBtn = i.status==='In Stock' ? btn('btn-gr btn-sm',"billFromStock('"+i.id+"')",'Bill Now') : '';
+    return '<tr>'
+      +'<td><div style="font-weight:600;">'+i.brand+'</div><div style="font-size:12px;color:var(--muted);">'+i.model+'</div></td>'
+      +'<td>'+(i.color||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:12px;">'+(i.chassis||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:12px;">'+(i.engine||'—')+'</td>'
+      +'<td style="font-size:12px;">'+supName+'</td>'
+      +'<td>₹'+fmt(i.purchase)+'</td>'
+      +'<td>'+badge(stBadge(i.status),i.status)+'</td>'
+      +'<td><div style="display:flex;gap:4px;">'+billBtn+btn('btn-g btn-sm',"editStock('"+i.id+"')",'✏️')+btn('btn-d btn-sm',"deleteStock('"+i.id+"')",'🗑')+'</div></td>'
+      +'</tr>';
+  });
+  $('inv-body').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">No inventory found</td></tr>';
+}
+
+window.checkPurchaseNote=()=>{const v=Number($('stock-purchase').value)||0;$('purchase-note').style.display=v>0?'block':'none';};
+
+window.openStockModal = async () => {
+  $('stock-id').value='';
+  ['stock-brand','stock-model','stock-color','stock-chassis','stock-engine','stock-purchase'].forEach(id=>$(id).value='');
+  $('stock-status').value='In Stock'; $('purchase-note').style.display='none';
+  const sups=await DB.get('suppliers');
+  $('stock-supplier').innerHTML='<option value="">Select Supplier</option>'+sups.map(s=>'<option value="'+s.id+'">'+s.name+'</option>').join('');
+  fillDl('brand-dl2',DB.gs('brands'));fillDl('model-dl2',DB.gs('models'));
+  $('stock-modal-title').textContent='Add Stock';$('modal-stock').style.display='flex';
+};
+
+window.editStock = async id => {
+  const i=(await DB.get('inventory')).find(x=>x.id===id);if(!i)return;
+  $('stock-id').value=id;
+  ['brand','model','color','chassis','engine','purchase'].forEach(f=>$('stock-'+f).value=i[f]||'');
+  $('stock-status').value=i.status||'In Stock';
+  const sups=await DB.get('suppliers');
+  $('stock-supplier').innerHTML='<option value="">Select Supplier</option>'+sups.map(s=>'<option value="'+s.id+'" '+(s.id===i.supplier?'selected':'')+'>'+s.name+'</option>').join('');
+  fillDl('brand-dl2',DB.gs('brands'));fillDl('model-dl2',DB.gs('models'));
+  $('stock-modal-title').textContent='Edit Stock';$('modal-stock').style.display='flex';
+};
+
+window.saveStock = async () => {
+  const brand=$('stock-brand').value.trim(), model=$('stock-model').value.trim(), chassis=$('stock-chassis').value.trim();
+  if(!brand||!model||!chassis){showToast('Brand, Model, Chassis required','error');return;}
+  const id=$('stock-id').value||DB.uid();
+  const existing=(await DB.get('inventory')).find(x=>x.id===id);
+  const purchase=Number($('stock-purchase').value)||0;
+  const supplierId=$('stock-supplier').value;
+  const brands=DB.gs('brands');if(!brands.includes(brand)){brands.push(brand);DB.ss('brands',brands);}
+  const models=DB.gs('models');if(!models.includes(model)){models.push(model);DB.ss('models',models);}
+  await DB.save('inventory',id,{id,brand,model,color:$('stock-color').value,chassis,engine:$('stock-engine').value,supplier:supplierId,purchase,status:$('stock-status').value,date:td()});
+  if(!existing&&purchase>0) {
+    const sups=await DB.get('suppliers');
+    const sup=sups.find(x=>x.id===supplierId);
+    const aid=DB.uid();
+    await DB.save('accounts',aid,{id:aid,date:td(),type:'expense',category:'Supplier Payment',desc:'Stock Purchase: '+brand+' '+model+' — '+chassis,amount:purchase,branch:window.currentUser?.activeBranch||'',by:window.currentUser?.username||'',supplierId});
+    if(sup){await DB.save('suppliers',supplierId,{...sup,outstanding:(Number(sup.outstanding)||0)+purchase});}
+  }
+  closeModal('modal-stock');showToast('Stock saved!');renderInventory();
+};
+
+window.deleteStock=async id=>{if(!confirm('Delete stock?'))return;await DB.del('inventory',id);showToast('Deleted');renderInventory();};
+window.billFromStock=id=>{navigate('billing');setTimeout(()=>openBillingModal(id),150);};
+
+// ── Billing ──
+async function renderBills(){
+  const search=($('bill-search').value||'').toLowerCase();
+  let data=await DB.get('bills');
+  if(window.currentUser?.activeBranch) data=data.filter(x=>x.branch===window.currentUser.activeBranch);
+  if(search) data=data.filter(x=>(x.customerName||'').toLowerCase().includes(search)||(x.vehicleName||'').toLowerCase().includes(search)||(x.billNo||'').toLowerCase().includes(search));
+  $('bill-count').textContent=data.length+' bills';
+  const branches=await DB.get('branches');
+  const rows = data.slice().reverse().map(b => {
+    const brName=(branches.find(x=>x.id===b.branch)||{name:b.branch||'—'}).name;
+    const adminBtns = isA() ? btn('btn-g btn-sm',"editBill('"+b.id+"')",'✏️')+btn('btn-d btn-sm',"deleteBill('"+b.id+"')",'🗑') : '';
+    return '<tr>'
+      +'<td style="font-weight:700;color:var(--accent);">#'+(b.billNo||b.id.slice(-6))+'</td>'
+      +'<td><div style="font-weight:600;">'+(b.customerName||'—')+'</div><div style="font-size:11px;color:var(--muted);">'+(b.customerMobile||'')+'</div></td>'
+      +'<td><div style="font-weight:500;">'+(b.vehicleName||'—')+'</div><div style="font-size:11px;color:var(--muted);">'+(b.chassisNo||'')+'</div></td>'
+      +'<td style="font-weight:700;">₹'+fmt(b.total)+'</td>'
+      +'<td style="color:var(--green);font-weight:600;">₹'+fmt(b.cashPaid)+'</td>'
+      +'<td style="color:var(--red);font-weight:600;">₹'+fmt(b.balance)+'</td>'
+      +'<td style="font-size:12px;">'+(b.financeBy||'—')+'</td>'
+      +'<td style="font-size:12px;">'+brName+'</td>'
+      +'<td style="font-size:12px;">'+(b.date||'—')+'</td>'
+      +'<td><div style="display:flex;gap:4px;">'+btn('btn-s btn-sm',"viewInvoice('"+b.id+"')",'Invoice')+adminBtns+'</div></td>'
+      +'</tr>';
+  });
+  $('bill-body').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:40px;">No bills found</td></tr>';
+}
+
+window.openBillingModal = async (preStockId=null) => {
+  $('bill-edit-id').value='';
+  $('billing-title').textContent='Generate Bill';
+  $('bill-save-btn').textContent='Generate Bill';
+  const [custs,inv]=await Promise.all([DB.get('customers'),DB.get('inventory')]);
+  let filtCusts=custs;
+  if(window.currentUser?.activeBranch) filtCusts=custs.filter(x=>x.branch===window.currentUser.activeBranch);
+  $('bill-cust').innerHTML='<option value="">-- Select Customer --</option>'+filtCusts.map(c=>'<option value="'+c.id+'">'+c.name+' — '+c.mobile+'</option>').join('');
+  const avail=inv.filter(x=>x.status==='In Stock');
+  $('bill-veh').innerHTML='<option value="">-- Select Vehicle --</option>'+avail.map(i=>'<option value="'+i.id+'" '+(i.id===preStockId?'selected':'')+'>'+i.brand+' '+i.model+' — '+i.chassis+'</option>').join('');
+  const fbs=DB.gs('financeBy');
+  $('bill-finance').innerHTML='<option value="">No Finance</option>'+fbs.map(f=>'<option value="'+f+'">'+f+'</option>').join('');
+  ['bill-price','bill-acc','bill-rto','bill-affi','bill-ins','bill-other','bill-cash'].forEach(id=>$(id).value='');
+  $('bill-other-desc').value='';$('bill-date').value=td();
+  $('bill-cust-preview').innerHTML='Select a customer to see details';
+  calcBill();$('modal-billing').style.display='flex';
+};
+
+window.editBill = async id => {
+  const bill=(await DB.get('bills')).find(x=>x.id===id);if(!bill)return;
+  await openBillingModal();
+  $('bill-edit-id').value=id;$('billing-title').textContent='Edit Bill #'+bill.billNo;$('bill-save-btn').textContent='Update Bill';
+  $('bill-cust').value=bill.custId||'';
+  $('bill-price').value=bill.price||'';$('bill-finance').value=bill.financeBy||'';
+  $('bill-acc').value=bill.accessories||'';$('bill-rto').value=bill.rto||'';$('bill-affi').value=bill.affi||'';
+  $('bill-ins').value=bill.insurance||'';$('bill-other').value=bill.other||'';$('bill-other-desc').value=bill.otherDesc||'';
+  $('bill-cash').value=bill.cashPaid||'';$('bill-date').value=bill.date||td();
+  fetchCustForBill();calcBill();
+};
+
+window.fetchCustForBill = async () => {
+  const id=$('bill-cust').value;
+  const c=(await DB.get('customers')).find(x=>x.id===id);
+  $('bill-cust-preview').innerHTML = c ? '<b>'+c.name+'</b> &nbsp;|&nbsp; 📱 '+c.mobile+' &nbsp;|&nbsp; 📍 '+(c.address||'')+' &nbsp;|&nbsp; 🏍 Wants: '+(c.brand||'')+' '+(c.model||'') : 'Select a customer to see details';
+};
+
+window.calcBill = () => {
+  const price=Number($('bill-price').value)||0;
+  const acc=Number($('bill-acc').value)||0;
+  const rto=Number($('bill-rto').value)||0;
+  const affi=Number($('bill-affi').value)||0;
+  const ins=Number($('bill-ins').value)||0;
+  const other=Number($('bill-other').value)||0;
+  const cash=Number($('bill-cash').value)||0;
+  const total=price+acc+rto+affi+ins+other;
+  const balance=total-cash;
+  const balColor = balance>0?'var(--red)':'var(--green)';
+  $('bill-calc').innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'
+    +'<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Total Bill</div><div style="font-size:20px;font-weight:800;color:var(--accent);">₹'+fmt(total)+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Cash Paid</div><div style="font-size:20px;font-weight:800;color:var(--green);">₹'+fmt(cash)+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;">Balance</div><div style="font-size:20px;font-weight:800;color:'+balColor+';">₹'+fmt(balance)+'</div></div>'
+    +'</div>';
+};
+
+window.saveBill = async () => {
+  const custId=$('bill-cust').value;
+  const vehicleId=$('bill-veh').value;
+  const price=Number($('bill-price').value)||0;
+  const editId=$('bill-edit-id').value;
+  if(!custId||(!editId&&!vehicleId)||!price){showToast('Customer, Vehicle and Price required','error');return;}
+  const [custs,inv,bills]=await Promise.all([DB.get('customers'),DB.get('inventory'),DB.get('bills')]);
+  const c=custs.find(x=>x.id===custId);
+  const v=vehicleId?inv.find(x=>x.id===vehicleId):inv.find(x=>x.id===(bills.find(b=>b.id===editId)?.vehicleId));
+  const accessories=Number($('bill-acc').value)||0;
+  const rto=Number($('bill-rto').value)||0;
+  const affi=Number($('bill-affi').value)||0;
+  const insurance=Number($('bill-ins').value)||0;
+  const other=Number($('bill-other').value)||0;
+  const otherDesc=$('bill-other-desc').value;
+  const cashPaid=Number($('bill-cash').value)||0;
+  const total=price+accessories+rto+affi+insurance+other;
+  const balance=total-cashPaid;
+  const profit=total-Number(v?.purchase||0);
+  const id=editId||DB.uid();
+  const billNo=editId?(bills.find(b=>b.id===editId)?.billNo||id.slice(-6)):String(1000+bills.length+1);
+  const bill={id,billNo,custId,vehicleId:v?.id||'',customerName:c?.name||'',vehicleName:(v?.brand||'')+' '+(v?.model||''),vehicleBrand:v?.brand||'',customerMobile:c?.mobile||'',customerAddress:c?.address||'',chassisNo:v?.chassis||'',engineNo:v?.engine||'',price,financeBy:$('bill-finance').value,accessories,rto,affi,insurance,other,otherDesc,total,cashPaid,balance,profit,manualEntry:0,branch:window.currentUser?.activeBranch||'br1',staff:window.currentUser?.username||'',date:$('bill-date').value||td()};
+  await DB.save('bills',id,bill);
+  if(!editId){
+    if(v) await DB.save('inventory',v.id,{...v,status:'Sold'});
+    if(c){const h=[...(c.history||[]),{date:new Date().toISOString(),action:'Bill Generated #'+billNo,by:window.currentUser?.username||''}];await DB.save('customers',custId,{...c,stage:'4',history:h});}
+    if(cashPaid>0){const aid=DB.uid();await DB.save('accounts',aid,{id:aid,date:bill.date,type:'income',category:'Customer Payment',desc:'Bill #'+billNo+' - '+(c?.name||'')+' - Cash',amount:cashPaid,branch:bill.branch,by:bill.staff});}
+  }
+  window._invoiceBillId=id;
+  closeModal('modal-billing');showToast(editId?'Bill updated!':'Bill generated!');renderBills();
+  setTimeout(()=>viewInvoice(id),400);
+};
+
+window.deleteBill=async id=>{if(!isA()){showToast('Admin only','error');return;}if(!confirm('Delete bill?'))return;await DB.del('bills',id);showToast('Deleted');renderBills();};
+window.editCurrentBill=()=>{const id=window._invoiceBillId;if(!id)return;closeModal('modal-invoice');setTimeout(()=>editBill(id),200);};
+window.deleteCurrentBill=async()=>{const id=window._invoiceBillId;if(!id)return;if(!isA()){showToast('Admin only','error');return;}if(!confirm('Delete bill?'))return;await DB.del('bills',id);closeModal('modal-invoice');showToast('Deleted');renderBills();};
+
+window.viewInvoice = async id => {
+  window._invoiceBillId=id;
+  const bills=await DB.get('bills');
+  const bill=bills.find(x=>x.id===id);if(!bill)return;
+  const branches=await DB.get('branches');
+  const branch=branches.find(b=>b.id===bill.branch)||{name:'Main Branch'};
+  // Build invoice HTML using string concat — no nested backticks
+  const itemRow = (label, amt) => amt ? '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px 12px;font-size:13px;">'+label+'</td><td style="padding:10px 12px;text-align:right;font-weight:600;">₹'+fmt(amt)+'</td></tr>' : '';
+  const payRow = (label, amt, color) => '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-top:1px solid #e2e8f0;"><span>'+label+'</span><span style="color:'+color+';font-weight:700;">−₹'+fmt(amt)+'</span></div>';
+  let html = '<div id="invoice-print-area" style="color:#1e293b;background:#fff;padding:24px;border-radius:10px;font-family:sans-serif;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #6366f1;">';
+  html += '<div><div style="font-size:22px;font-weight:800;color:#6366f1;">VeloDesk</div><div style="font-size:13px;font-weight:700;">'+branch.name+'</div><div style="font-size:12px;color:#64748b;">'+(branch.address||'')+'</div><div style="font-size:12px;color:#64748b;">'+(branch.phone||'')+'</div></div>';
+  html += '<div style="text-align:right;"><div style="font-size:22px;font-weight:800;color:#6366f1;">INVOICE</div><div style="font-size:15px;font-weight:700;">#'+bill.billNo+'</div><div style="font-size:12px;color:#64748b;">Date: '+bill.date+'</div><div style="font-size:12px;color:#64748b;">Staff: '+bill.staff+'</div></div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">';
+  html += '<div style="background:#f8faff;border:1px solid #e0e7ff;padding:14px;border-radius:10px;"><div style="font-size:10px;font-weight:700;color:#6366f1;text-transform:uppercase;margin-bottom:8px;">BILL TO</div><div style="font-weight:700;font-size:15px;">'+bill.customerName+'</div><div style="font-size:13px;color:#64748b;">'+bill.customerMobile+'</div><div style="font-size:13px;color:#64748b;">'+(bill.customerAddress||'')+'</div></div>';
+  html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:14px;border-radius:10px;"><div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:8px;">VEHICLE</div><div style="font-weight:700;font-size:15px;">'+bill.vehicleName+'</div><div style="font-size:12px;color:#64748b;">Chassis: '+bill.chassisNo+'</div><div style="font-size:12px;color:#64748b;">Engine: '+bill.engineNo+'</div>'+(bill.financeBy?'<div style="font-size:12px;color:#2563eb;font-weight:600;">Finance: '+bill.financeBy+'</div>':'')+'</div></div>';
+  html += '<table style="width:100%;border-collapse:collapse;margin-bottom:16px;"><thead><tr style="background:#6366f1;color:#fff;"><th style="padding:10px 12px;text-align:left;font-size:12px;">Description</th><th style="padding:10px 12px;text-align:right;font-size:12px;">Amount</th></tr></thead><tbody>';
+  html += '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px 12px;font-size:13px;">Vehicle Price — '+bill.vehicleName+'</td><td style="padding:10px 12px;text-align:right;font-weight:600;">₹'+fmt(bill.price)+'</td></tr>';
+  html += itemRow('Accessories', bill.accessories);
+  html += itemRow('RTO Fees', bill.rto);
+  html += itemRow('AFFI Amount', bill.affi);
+  html += itemRow('Insurance', bill.insurance);
+  html += bill.other ? itemRow((bill.otherDesc||'Other'), bill.other) : '';
+  html += '</tbody></table>';
+  html += '<div style="display:flex;justify-content:flex-end;"><div style="min-width:240px;background:#f8faff;border:1px solid #e0e7ff;border-radius:10px;padding:14px;">';
+  html += '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span>Total Amount</span><span style="font-weight:700;">₹'+fmt(bill.total)+'</span></div>';
+  if(bill.cashPaid) html += payRow('Cash Paid', bill.cashPaid, '#059669');
+  if(bill.manualEntry) html += payRow('Manual Entry', bill.manualEntry, '#7c3aed');
+  html += '<div style="display:flex;justify-content:space-between;padding:8px;font-size:15px;font-weight:800;background:#ede9fe;border-radius:6px;margin-top:6px;"><span>Balance Due</span><span style="color:#6366f1;">₹'+fmt(bill.balance)+'</span></div>';
+  html += '</div></div>';
+  html += '<div style="margin-top:24px;border-top:1px solid #f1f5f9;padding-top:14px;display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;"><span>Generated by VeloDesk</span><span>Thank you for your purchase! 🙏</span></div></div>';
+  $('invoice-content').innerHTML = html;
+  const ia=$('inv-admin-actions'); if(ia) ia.style.display=isA()?'flex':'none';
+  $('modal-invoice').style.display='flex';
+};
+
+window.printInvoice=()=>{const c=$('invoice-print-area').innerHTML;const w=window.open('','_blank');w.document.write('<html><head><title>Invoice</title><style>body{margin:0;padding:20px;font-family:sans-serif;}@media print{body{padding:0;}}</style></head><body>'+c+'</body></html>');w.document.close();w.print();};
+
+window.downloadInvoicePDF=async()=>{
+  const id=window._invoiceBillId;
+  const bills=await DB.get('bills');
+  const bill=bills.find(x=>x.id===id)||(bills.length?bills[bills.length-1]:null);if(!bill)return;
+  const {jsPDF}=window.jspdf;const doc=new jsPDF();
+  doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('VeloDesk — INVOICE',15,18);
+  doc.setFontSize(11);doc.setFont('helvetica','normal');
+  doc.text('Bill #: '+bill.billNo,15,30);doc.text('Date: '+bill.date,15,38);
+  doc.text('Customer: '+bill.customerName,15,48);doc.text('Mobile: '+bill.customerMobile,15,56);
+  doc.text('Vehicle: '+bill.vehicleName,15,66);doc.text('Chassis: '+bill.chassisNo,15,74);
+  const rows=[['Vehicle Price','₹'+fmt(bill.price)]];
+  if(bill.accessories)rows.push(['Accessories','₹'+fmt(bill.accessories)]);
+  if(bill.rto)rows.push(['RTO Fees','₹'+fmt(bill.rto)]);
+  if(bill.affi)rows.push(['AFFI','₹'+fmt(bill.affi)]);
+  if(bill.insurance)rows.push(['Insurance','₹'+fmt(bill.insurance)]);
+  if(bill.other)rows.push([bill.otherDesc||'Other','₹'+fmt(bill.other)]);
+  rows.push(['TOTAL','₹'+fmt(bill.total)]);
+  if(bill.cashPaid)rows.push(['Cash Paid','₹'+fmt(bill.cashPaid)]);
+  if(bill.manualEntry)rows.push(['Manual Entry','₹'+fmt(bill.manualEntry)]);
+  rows.push(['Balance Due','₹'+fmt(bill.balance)]);
+  doc.autoTable({startY:82,head:[['Item','Amount']],body:rows,styles:{fontSize:11},headStyles:{fillColor:[99,102,241]}});
+  doc.save('Invoice_'+bill.billNo+'.pdf');
+};
+
+// ── Bill Summary ──
+async function renderBillSummary(){
+  const fromD=$('bs-from').value, toD=$('bs-to').value, branchF=$('bs-branch-filter').value;
+  let data=await DB.get('bills');
+  const branches=await DB.get('branches');
+  $('bs-branch-filter').innerHTML='<option value="">All Branches</option>'+branches.map(b=>'<option value="'+b.id+'" '+(b.id===branchF?'selected':'')+'>'+b.name+'</option>').join('');
+  if(window.currentUser?.activeBranch) data=data.filter(x=>x.branch===window.currentUser.activeBranch);
+  if(fromD) data=data.filter(x=>x.date>=fromD);
+  if(toD) data=data.filter(x=>x.date<=toD);
+  if(branchF) data=data.filter(x=>x.branch===branchF);
+  data=data.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const totBilled=data.reduce((s,b)=>s+Number(b.total||0),0);
+  const totCash=data.reduce((s,b)=>s+Number(b.cashPaid||0),0);
+  const totManual=data.reduce((s,b)=>s+Number(b.manualEntry||0),0);
+  // Balance = total - cashPaid - manualEntry
+  const totBal=data.reduce((s,b)=>s+Math.max(0,Number(b.total||0)-Number(b.cashPaid||0)-Number(b.manualEntry||0)),0);
+  const totProfit=data.reduce((s,b)=>s+Number(b.profit||0),0);
+  $('bs-cards').innerHTML=[
+    {l:'Total Bills',v:data.length,c:'ci'},{l:'Total Billed',v:'₹'+fmt(totBilled),c:'cb'},
+    {l:'Cash Collected',v:'₹'+fmt(totCash),c:'ce'},{l:'Manual Entry',v:'₹'+fmt(totManual),c:'ct'},
+    {l:'Outstanding',v:'₹'+fmt(totBal),c:'co'},{l:'Total Profit',v:'₹'+fmt(totProfit),c:'cp'}
+  ].map(s=>'<div class="sc '+s.c+'"><div class="sv" style="font-size:16px;">'+s.v+'</div><div class="sl">'+s.l+'</div></div>').join('');
+  $('bs-count').textContent=data.length+' bills';
+  const rows = data.map(b => {
+    const brName=(branches.find(x=>x.id===b.branch)||{name:b.branch||'—'}).name;
+    const profCls = Number(b.profit||0)>=0 ? 'pp' : 'pn';
+    const effBalance=Math.max(0,Number(b.total||0)-Number(b.cashPaid||0)-Number(b.manualEntry||0));
+    // Manual entry is an inline editable input — admin only
+    const manualCell = isA()
+      ? '<td><input type="number" class="inp" style="width:100px;padding:4px 8px;font-size:12px;" value="'+(b.manualEntry||0)+'" onchange="saveBSManualEntry(\''+b.id+'\',this.value)" placeholder="0"></td>'
+      : '<td style="color:var(--blue);font-weight:600;">₹'+fmt(b.manualEntry||0)+'</td>';
+    return '<tr>'
+      +'<td style="font-weight:700;color:var(--accent);">#'+b.billNo+'</td>'
+      +'<td style="font-size:12px;">'+b.date+'</td>'
+      +'<td><div style="font-weight:600;">'+(b.customerName||'—')+'</div><div style="font-size:11px;color:var(--muted);">'+(b.customerMobile||'')+'</div></td>'
+      +'<td><div style="font-weight:500;">'+(b.vehicleName||'—')+'</div><div style="font-size:11px;color:var(--muted);">'+(b.chassisNo||'')+'</div></td>'
+      +'<td style="font-weight:700;">₹'+fmt(b.total)+'</td>'
+      +'<td style="color:var(--blue);font-weight:600;">'+(b.financeBy||'—')+'</td>'
+      +'<td style="color:var(--green);font-weight:600;">₹'+fmt(b.cashPaid)+'</td>'
+      +manualCell
+      +'<td style="color:var(--red);font-weight:600;">₹'+fmt(effBalance)+'</td>'
+      +'<td class="'+profCls+'">₹'+fmt(b.profit)+'</td>'
+      +'<td style="font-size:12px;">'+brName+'</td>'
+      +'<td style="font-size:12px;">'+(b.staff||'—')+'</td>'
+      +'</tr>';
+  });
+  $('bs-body').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:40px;">No bills found</td></tr>';
+}
+
+window.saveBSManualEntry = async (billId, value) => {
+  const bills = await DB.get('bills');
+  const bill = bills.find(x=>x.id===billId); if(!bill) return;
+  const manualEntry = Number(value)||0;
+  // Balance = total - cashPaid - manualEntry
+  const newBalance = Math.max(0, Number(bill.total||0) - Number(bill.cashPaid||0) - manualEntry);
+  await DB.save('bills', billId, {...bill, manualEntry, balance: newBalance});
+  showToast('Manual entry saved!');
+  // When manual entry is added, reduce supplier outstanding (finance received = supplier paid)
+  await syncSupplierFromFinance(bill, manualEntry);
+  // Also add income entry in accounts for this manual entry
+  if(manualEntry>0){
+    const existAcc = (await DB.get('accounts')).find(x=>x.billId===billId&&x.category==='Manual Entry');
+    if(!existAcc){
+      const aid=DB.uid();
+      await DB.save('accounts',aid,{id:aid,date:bill.date,type:'income',category:'Manual Entry',desc:'Bill #'+bill.billNo+' - '+(bill.customerName||'')+' - Manual',amount:manualEntry,billId,branch:bill.branch,by:window.currentUser?.username||''});
+    }
+  }
+  renderBillSummary();
+};
+
+// Sync supplier outstanding when finance voucher is received
+async function syncSupplierFromFinance(bill, financeAmt) {
+  if(!financeAmt || !bill.vehicleId) return;
+  const inv = await DB.get('inventory');
+  const vehicle = inv.find(x=>x.id===bill.vehicleId);
+  if(!vehicle || !vehicle.supplier) return;
+  const sups = await DB.get('suppliers');
+  const sup = sups.find(x=>x.id===vehicle.supplier);
+  if(!sup) return;
+  // Finance received reduces supplier outstanding (bank pays dealer, dealer pays supplier)
+  const newOutstanding = Math.max(0, Number(sup.outstanding||0) - financeAmt);
+  const newPaid = Number(sup.paid||0) + financeAmt;
+  await DB.save('suppliers', sup.id, {...sup, outstanding: newOutstanding, paid: newPaid});
+}
+
+window.exportBSSummaryPDF=async()=>{
+  const data=await DB.get('bills');
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape'});
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text('VeloDesk — Bill Summary Report',15,18);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Generated: '+new Date().toLocaleDateString('en-IN'),15,26);
+  doc.autoTable({startY:32,head:[['Bill#','Date','Customer','Vehicle','Total','Finance By','Cash Paid','Manual Entry','Balance','Profit','Branch']],
+    body:data.map(b=>{
+      const effBal=Math.max(0,Number(b.total||0)-Number(b.cashPaid||0)-Number(b.manualEntry||0));
+      return ['#'+b.billNo,b.date,b.customerName,b.vehicleName,'₹'+fmt(b.total),(b.financeBy||'—'),'₹'+fmt(b.cashPaid),'₹'+fmt(b.manualEntry||0),'₹'+fmt(effBal),'₹'+fmt(b.profit),b.branch||''];
+    }),
+    styles:{fontSize:8},headStyles:{fillColor:[99,102,241]}});
+  doc.save('VeloDesk_BillSummary_'+td()+'.pdf');showToast('Downloaded!');
+};
+
+// ── Accounts ──
+async function renderAccounts(){
+  const ab=$('acc-admin-btns');if(ab)ab.style.display=isA()?'flex':'none';
+  const ath=$('acc-act-th');if(ath)ath.style.display=isA()?'':'none';
+  const typeF=$('acc-type-filter').value, fromD=$('acc-from').value, toD=$('acc-to').value;
+  let data=await DB.get('accounts');
+  if(window.currentUser?.activeBranch) data=data.filter(x=>x.branch===window.currentUser.activeBranch);
+  if(typeF) data=data.filter(x=>x.type===typeF);
+  if(fromD) data=data.filter(x=>x.date>=fromD);
+  if(toD) data=data.filter(x=>x.date<=toD);
+  data=data.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const income=data.filter(x=>x.type==='income').reduce((s,a)=>s+Number(a.amount),0);
+  const expense=data.filter(x=>x.type==='expense').reduce((s,a)=>s+Number(a.amount),0);
+  const bankBal=data.filter(x=>x.type==='bank').reduce((s,a)=>s+Number(a.amount)*(a.direction==='in'?1:-1),0);
+  $('acc-cards').innerHTML=[
+    {l:'Total Income',v:'₹'+fmt(income),c:'ce'},{l:'Total Expense',v:'₹'+fmt(expense),c:'co'},
+    {l:'Net Cash',v:'₹'+fmt(income-expense),c:'ci'},{l:'Bank Balance',v:'₹'+fmt(bankBal),c:'cb'}
+  ].map(s=>'<div class="sc '+s.c+'"><div class="sv" style="font-size:18px;">'+s.v+'</div><div class="sl">'+s.l+'</div></div>').join('');
+  const banks=DB.gs('banks');
+  const bankSec=$('bank-sec');
+  if(banks.length>0){
+    bankSec.style.display='block';
+    $('bank-cards').innerHTML=banks.map(bank=>{
+      const bd=data.filter(x=>x.type==='bank'&&x.bankName===bank);
+      const bal=bd.filter(x=>x.direction==='in').reduce((s,a)=>s+Number(a.amount),0)-bd.filter(x=>x.direction==='out').reduce((s,a)=>s+Number(a.amount),0);
+      return '<div class="card" style="background:linear-gradient(135deg,var(--bbg),#dbeafe);border-color:#bfdbfe;"><div style="font-weight:700;font-size:13px;margin-bottom:4px;">🏦 '+bank+'</div><div style="font-size:20px;font-weight:800;color:var(--blue);">₹'+fmt(bal)+'</div><div style="font-size:11px;color:var(--muted);">Running Balance</div></div>';
+    }).join('');
+  } else bankSec.style.display='none';
+  const branches=await DB.get('branches');
+  const typeBadgeClass = t => t==='income'?'bg':t==='bank'?'bb':'br';
+  const typeColor = t => t==='income'?'var(--green)':t==='bank'?'var(--blue)':'var(--red)';
+  const rows = data.map(a => {
+    const brName=(branches.find(b=>b.id===a.branch)||{name:a.branch||'—'}).name;
+    const delBtn = isA() ? btn('btn-d btn-sm',"deleteAccount('"+a.id+"')",'🗑') : '';
+    return '<tr>'
+      +'<td style="font-size:12px;">'+a.date+'</td>'
+      +'<td>'+badge(typeBadgeClass(a.type),a.type.toUpperCase())+'</td>'
+      +'<td>'+(a.category||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);max-width:180px;">'+(a.desc||'—')+'</td>'
+      +'<td style="font-weight:700;color:'+typeColor(a.type)+';">₹'+fmt(a.amount)+'</td>'
+      +'<td style="font-size:12px;">'+(a.bankName||'—')+'</td>'
+      +'<td style="font-size:12px;">'+brName+'</td>'
+      +'<td>'+delBtn+'</td>'
+      +'</tr>';
+  });
+  $('acc-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">No entries</td></tr>';
+}
+
+window.openAccountModal=async type=>{
+  $('acc-id').value='';$('acc-type-val').value=type;
+  $('acc-modal-title').textContent=type==='income'?'Add Income':type==='bank'?'Bank Entry':'Add Expense';
+  $('acc-date').value=td();$('acc-desc').value='';$('acc-amount').value='';
+  const catSel=$('acc-category');
+  if(type==='income') catSel.innerHTML=['Customer Payment','Bank Loan','Finance Amount','Other Income'].map(c=>'<option>'+c+'</option>').join('');
+  else if(type==='bank') catSel.innerHTML=['Deposit','Withdrawal','Transfer In','Transfer Out'].map(c=>'<option>'+c+'</option>').join('');
+  else catSel.innerHTML=DB.gs('expenseCategories').map(c=>'<option>'+c+'</option>').join('');
+  const bf=$('acc-bank-field'), bs=$('acc-bank-name');
+  if(type==='bank'){bf.style.display='block';bs.innerHTML=DB.gs('banks').map(b=>'<option value="'+b+'">'+b+'</option>').join('');}else bf.style.display='none';
+  const branches=await DB.get('branches');
+  $('acc-branch-sel').innerHTML=branches.map(b=>'<option value="'+b.id+'" '+(b.id===(window.currentUser?.activeBranch)||''?'selected':'')+'>'+b.name+'</option>').join('');
+  $('modal-account').style.display='flex';
+};
+
+window.saveAccount=async()=>{
+  if(!isA()){showToast('Admin access required','error');return;}
+  const date=$('acc-date').value, amount=Number($('acc-amount').value)||0;
+  if(!date||!amount){showToast('Date and Amount required','error');return;}
+  const type=$('acc-type-val').value, category=$('acc-category').value;
+  const id=$('acc-id').value||DB.uid();
+  const bankName=type==='bank'?$('acc-bank-name').value:'';
+  const direction=type==='bank'?(['Deposit','Transfer In'].includes(category)?'in':'out'):'';
+  await DB.save('accounts',id,{id,date,type,category,desc:$('acc-desc').value,amount,bankName,direction,branch:$('acc-branch-sel').value,by:window.currentUser?.username||''});
+  closeModal('modal-account');showToast('Entry saved!');renderAccounts();
+};
+
+window.deleteAccount=async id=>{if(!isA()){showToast('Admin only','error');return;}if(!confirm('Delete?'))return;await DB.del('accounts',id);showToast('Deleted');renderAccounts();};
+
+// ── Suppliers ──
+async function renderSuppliers(){
+  const search=($('sup-search').value||'').toLowerCase();
+  let data=await DB.get('suppliers');
+  if(search) data=data.filter(x=>(x.name||'').toLowerCase().includes(search));
+  const inv=await DB.get('inventory');
+  const rows=data.map(s=>{
+    const sv=inv.filter(x=>x.supplier===s.id).reduce((sum,i)=>sum+Number(i.purchase||0),0);
+    return '<tr>'
+      +'<td style="font-weight:600;">'+s.name+'</td>'
+      +'<td>'+(s.mobile||'—')+'</td>'
+      +'<td style="font-size:12px;color:var(--muted);">'+(s.address||'—')+'</td>'
+      +'<td style="font-family:monospace;font-size:12px;">'+(s.gst||'—')+'</td>'
+      +'<td style="font-weight:600;color:var(--blue);">₹'+fmt(sv)+'</td>'
+      +'<td style="font-weight:700;color:'+(Number(s.outstanding)>0?'var(--red)':'var(--green)')+';">₹'+fmt(s.outstanding)+'</td>'
+      +'<td style="color:var(--green);font-weight:600;">₹'+fmt(s.paid||0)+'</td>'
+      +'<td><div style="display:flex;gap:4px;">'+btn('btn-g btn-sm',"editSupplier('"+s.id+"')",'✏️')+btn('btn-d btn-sm',"deleteSupplier('"+s.id+"')",'🗑')+'</div></td>'
+      +'</tr>';
+  });
+  $('sup-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">No suppliers</td></tr>';
+}
+window.syncSupplierOutstanding=async()=>{
+  const [sups,inv,acc,bills]=await Promise.all([DB.get('suppliers'),DB.get('inventory'),DB.get('accounts'),DB.get('bills')]);
+  for(const sup of sups){
+    // Total stock value purchased from this supplier
+    const sv=inv.filter(x=>x.supplier===sup.id).reduce((s,i)=>s+Number(i.purchase||0),0);
+    // Direct payments made via expense account entries tagged with supplierId
+    const directPaid=acc.filter(x=>x.supplierId===sup.id&&x.type==='expense').reduce((s,a)=>s+Number(a.amount||0),0);
+    // Manual entries in Bill Summary for vehicles from this supplier (finance voucher received)
+    const supVehicleIds=inv.filter(x=>x.supplier===sup.id).map(x=>x.id);
+    const manualReceived=bills.filter(x=>supVehicleIds.includes(x.vehicleId)).reduce((s,b)=>s+Number(b.manualEntry||0),0);
+    const totalPaid=directPaid+manualReceived;
+    const outstanding=Math.max(0,sv-totalPaid);
+    await DB.save('suppliers',sup.id,{...sup,outstanding,paid:totalPaid,stockValue:sv});
+  }
+  showToast('Supplier outstanding synced!');renderSuppliers();
+};
+window.openSupplierModal=()=>{$('sup-id').value='';['sup-name','sup-mobile','sup-address','sup-gst'].forEach(id=>$(id).value='');$('sup-outstanding').value='0';$('sup-paid').value='0';$('sup-modal-title').textContent='Add Supplier';$('modal-supplier').style.display='flex';};
+window.editSupplier=async id=>{const s=(await DB.get('suppliers')).find(x=>x.id===id);if(!s)return;$('sup-id').value=id;['name','mobile','address','gst','outstanding','paid'].forEach(f=>$('sup-'+f).value=s[f]||'');$('sup-modal-title').textContent='Edit Supplier';$('modal-supplier').style.display='flex';};
+window.saveSupplier=async()=>{const name=$('sup-name').value.trim();if(!name){showToast('Name required','error');return;}const id=$('sup-id').value||DB.uid();await DB.save('suppliers',id,{id,name,mobile:$('sup-mobile').value,address:$('sup-address').value,gst:$('sup-gst').value,outstanding:Number($('sup-outstanding').value)||0,paid:Number($('sup-paid').value)||0});closeModal('modal-supplier');showToast('Saved!');renderSuppliers();};
+window.deleteSupplier=async id=>{if(!confirm('Delete?'))return;await DB.del('suppliers',id);showToast('Deleted');renderSuppliers();};
+
+// ── HR ──
+async function renderHR(){
+  const search=($('hr-search').value||'').toLowerCase();
+  let data=await DB.get('staff');
+  if(window.currentUser?.activeBranch) data=data.filter(x=>x.branch===window.currentUser.activeBranch);
+  if(search) data=data.filter(x=>(x.name||'').toLowerCase().includes(search));
+  const branches=await DB.get('branches');
+  const rows=data.map(s=>{
+    const brName=(branches.find(b=>b.id===s.branch)||{name:s.branch||'—'}).name;
+    return '<tr>'
+      +'<td><div style="font-weight:600;">'+s.name+'</div><div style="font-size:11px;color:var(--muted);">'+(s.notes||'')+'</div></td>'
+      +'<td>'+(s.mobile||'—')+'</td><td>'+(s.designation||'—')+'</td>'
+      +'<td style="font-size:12px;">'+brName+'</td>'
+      +'<td style="font-weight:600;color:var(--green);">₹'+fmt(s.salary)+'</td>'
+      +'<td style="font-size:12px;">'+(s.joining||'—')+'</td>'
+      +'<td><div style="display:flex;gap:4px;">'+btn('btn-g btn-sm',"editStaff('"+s.id+"')",'✏️')+btn('btn-d btn-sm',"deleteStaff('"+s.id+"')",'🗑')+'</div></td>'
+      +'</tr>';
+  });
+  $('hr-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">No staff</td></tr>';
+}
+window.openStaffModal=async()=>{$('staff-id').value='';['staff-name','staff-mobile','staff-desig','staff-notes'].forEach(id=>$(id).value='');$('staff-salary').value='';$('staff-joining').value='';const b=await DB.get('branches');$('staff-branch-sel').innerHTML=b.map(x=>'<option value="'+x.id+'">'+x.name+'</option>').join('');$('staff-modal-title').textContent='Add Staff';$('modal-staff').style.display='flex';};
+window.editStaff=async id=>{const s=(await DB.get('staff')).find(x=>x.id===id);if(!s)return;$('staff-id').value=id;$('staff-name').value=s.name||'';$('staff-mobile').value=s.mobile||'';$('staff-desig').value=s.designation||'';$('staff-salary').value=s.salary||'';$('staff-joining').value=s.joining||'';$('staff-notes').value=s.notes||'';const b=await DB.get('branches');$('staff-branch-sel').innerHTML=b.map(x=>'<option value="'+x.id+'" '+(x.id===s.branch?'selected':'')+'>'+x.name+'</option>').join('');$('staff-modal-title').textContent='Edit Staff';$('modal-staff').style.display='flex';};
+window.saveStaff=async()=>{const name=$('staff-name').value.trim();if(!name){showToast('Name required','error');return;}const id=$('staff-id').value||DB.uid();await DB.save('staff',id,{id,name,mobile:$('staff-mobile').value,designation:$('staff-desig').value,branch:$('staff-branch-sel').value,salary:Number($('staff-salary').value)||0,joining:$('staff-joining').value,notes:$('staff-notes').value});closeModal('modal-staff');showToast('Saved!');renderHR();};
+window.deleteStaff=async id=>{if(!confirm('Delete?'))return;await DB.del('staff',id);showToast('Deleted');renderHR();};
+
+// ── Branches ──
+async function renderBranches(){
+  const data=await DB.get('branches');
+  const rows=data.map(b=>'<tr><td style="font-weight:600;">'+b.name+'</td><td style="font-size:12px;">'+(b.address||'—')+'</td><td>'+(b.manager||'—')+'</td><td>'+(b.phone||'—')+'</td><td><div style="display:flex;gap:4px;">'+btn('btn-g btn-sm',"editBranch('"+b.id+"')",'✏️')+btn('btn-d btn-sm',"deleteBranch('"+b.id+"')",'🗑')+'</div></td></tr>');
+  $('branch-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">No branches</td></tr>';
+}
+window.openBranchModal=()=>{$('branch-id').value='';['branch-name','branch-address','branch-manager','branch-phone'].forEach(id=>$(id).value='');$('modal-branch').style.display='flex';};
+window.editBranch=async id=>{const b=(await DB.get('branches')).find(x=>x.id===id);if(!b)return;$('branch-id').value=id;['name','address','manager','phone'].forEach(f=>$('branch-'+f).value=b[f]||'');$('modal-branch').style.display='flex';};
+window.saveBranch=async()=>{const name=$('branch-name').value.trim();if(!name){showToast('Name required','error');return;}const id=$('branch-id').value||DB.uid();await DB.save('branches',id,{id,name,address:$('branch-address').value,manager:$('branch-manager').value,phone:$('branch-phone').value});closeModal('modal-branch');showToast('Saved!');renderBranches();};
+window.deleteBranch=async id=>{if(!confirm('Delete?'))return;await DB.del('branches',id);showToast('Deleted');renderBranches();};
+
+// ── Settings ──
+async function renderSettings(){
+  ['brands','models','financeBy','expenseCategories','banks'].forEach(key=>{
+    const arr=DB.gs(key), el=$(key+'-list');
+    if(el) el.innerHTML=arr.map(v=>'<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surface2);margin:2px;">'+v+'<span onclick="removeSetting(\''+key+'\',\''+v.replace(/'/g,"\\'")+'\')" style="cursor:pointer;color:var(--red);margin-left:4px;">×</span></div>').join('');
+  });
+  const users=await DB.get('users');
+  const ul=$('users-list');
+  if(ul) ul.innerHTML=users.map(u=>{
+    const delBtn = u.id!=='u1' ? btn('btn-d btn-sm',"deleteUser('"+u.id+"')",'Del') : '<span style="font-size:11px;color:var(--muted);">Default</span>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;"><div><b>'+(u.username||u.email||'User')+'</b>'+badge(u.role==='admin'?'bo':'bb',u.role)+'<span style="font-size:11px;color:var(--muted);margin-left:6px;">'+(u.branch||'All')+'</span></div>'+delBtn+'</div>';
+  }).join('');
+}
+window.addSetting=(key,inputId)=>{const val=$(inputId).value.trim();if(!val)return;const arr=DB.gs(key);if(!arr.includes(val)){arr.push(val);DB.ss(key,arr);}$(inputId).value='';renderSettings();};
+window.removeSetting=(key,val)=>{DB.ss(key,DB.gs(key).filter(x=>x!==val));renderSettings();};
+
+window.openUserModal=async()=>{
+  const branches=await DB.get('branches');
+  const brOpts='<option value="all">All Branches</option>'+branches.map(b=>'<option value="'+b.id+'">'+b.name+'</option>').join('');
+  $('user-modal-body').innerHTML = FB && window._fb
+    ? '<div class="ibox" style="margin-bottom:14px;font-size:12px;">ℹ️ User will login with Email via Firebase Auth. Also set a Username+Password for local login fallback.</div>'
+      +'<div style="display:grid;gap:14px;">'
+      +'<div><label>Email (Firebase Auth) *</label><input type="email" class="inp" id="u-email" placeholder="user@dealer.com"></div>'
+      +'<div><label>Display Name</label><input class="inp" id="u-name" placeholder="Staff name"></div>'
+      +'<div><label>Local Login Password (optional backup)</label><input type="password" class="inp" id="u-pass-fb" placeholder="Set for username login"></div>'
+      +'<div><label>Role</label><select class="inp" id="u-role"><option value="admin">Admin</option><option value="staff">Staff</option></select></div>'
+      +'<div><label>Branch</label><select class="inp" id="u-branch">'+brOpts+'</select></div>'
+      +'</div>'
+    : '<div class="wbox" style="margin-bottom:14px;font-size:12px;">⚡ Offline mode — username/password login</div>'
+      +'<div style="display:grid;gap:14px;">'
+      +'<div><label>Username *</label><input class="inp" id="u-username" placeholder="username"></div>'
+      +'<div><label>Password *</label><input type="password" class="inp" id="u-pass" placeholder="Min 6 chars"></div>'
+      +'<div><label>Role</label><select class="inp" id="u-role"><option value="admin">Admin</option><option value="staff">Staff</option></select></div>'
+      +'<div><label>Branch</label><select class="inp" id="u-branch">'+brOpts+'</select></div>'
+      +'</div>';
+  $('modal-user').style.display='flex';
+};
+
+window.saveUser=async()=>{
+  const role=$('u-role')?.value||'staff', branch=$('u-branch')?.value||'all';
+  const branchVal = branch==='all'?null:branch;
+  if(FB && window._fb){
+    // Firebase mode — but ALSO save to localStorage for username login fallback
+    const email=$('u-email')?.value.trim();
+    const uname=$('u-name')?.value.trim();
+    const upwd=$('u-pass-fb')?.value; // optional password for local fallback
+    if(!email){showToast('Email required','error');return;}
+    const id=DB.uid();
+    const userObj={id,email,username:uname||email.split('@')[0],role,branch:branchVal,displayName:uname||''};
+    await DB.save('users',id,userObj);
+    // Also save to localStorage for username/password local login
+    if(upwd){
+      const localUsers=JSON.parse(localStorage.getItem('vd_users')||'[]');
+      localUsers.push({...userObj,password:upwd});
+      localStorage.setItem('vd_users',JSON.stringify(localUsers));
+    }
+    closeModal('modal-user');showToast('User saved! Also create them in Firebase Auth Console for email login.','info');
+  } else {
+    const username=$('u-username')?.value.trim(), pwd=$('u-pass')?.value;
+    if(!username||!pwd){showToast('Username & Password required','error');return;}
+    const users=await DB.get('users');
+    if(users.find(u=>u.username===username)){showToast('Username already exists','error');return;}
+    const id=DB.uid();
+    const userObj={id,username,password:pwd,role,branch:branchVal};
+    await DB.save('users',id,userObj);
+    // Also ensure in localStorage
+    const localUsers=JSON.parse(localStorage.getItem('vd_users')||'[]');
+    if(!localUsers.find(u=>u.username===username)){localUsers.push(userObj);localStorage.setItem('vd_users',JSON.stringify(localUsers));}
+    closeModal('modal-user');showToast('User created! They can login with username/password now.');
+  }
+  renderSettings();
+};
+window.deleteUser=async id=>{if(!confirm('Delete user?'))return;await DB.del('users',id);showToast('Deleted');renderSettings();};
+
+// ── Reports ──
+window.generateReport=async type=>{
+  const {jsPDF}=window.jspdf;const doc=new jsPDF();
+  const dt=new Date().toLocaleDateString('en-IN');
+  const titles={sales:'Sales Report',stock:'Stock Report',customer:'Customer Report',expenses:'Expense Report',branch:'Branch Report',supplier:'Supplier Report',profit:'Profit Report'};
+  doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text('VeloDesk — '+titles[type],15,18);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Generated: '+dt,15,26);
+  if(type==='sales'){const b=await DB.get('bills');doc.autoTable({startY:32,head:[['Bill#','Customer','Vehicle','Total','Finance By','Cash Paid','Manual Entry','Balance','Date']],body:b.map(x=>['#'+x.billNo,x.customerName,x.vehicleName,'₹'+fmt(x.total),(x.financeBy||'—'),'₹'+fmt(x.cashPaid),'₹'+fmt(x.manualEntry||0),'₹'+fmt(x.balance),x.date]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  else if(type==='stock'){const i=await DB.get('inventory');doc.autoTable({startY:32,head:[['Brand','Model','Color','Chassis','Status','Purchase']],body:i.map(x=>[x.brand,x.model,x.color||'',x.chassis,x.status,'₹'+fmt(x.purchase)]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  else if(type==='customer'){const c=await DB.get('customers');doc.autoTable({startY:32,head:[['Name','Mobile','Requirement','Stage']],body:c.map(x=>[x.name,x.mobile,(x.brand||'')+' '+(x.model||''),SN[x.stage]||x.stage]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  else if(type==='expenses'){const a=(await DB.get('accounts')).filter(x=>x.type==='expense');doc.autoTable({startY:32,head:[['Date','Category','Description','Amount']],body:a.map(x=>[x.date,x.category,x.desc||'','₹'+fmt(x.amount)]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  else if(type==='branch'){const[br,bi]=await Promise.all([DB.get('branches'),DB.get('bills')]);doc.autoTable({startY:32,head:[['Branch','Bills','Revenue','Profit']],body:br.map(b=>{const bills=bi.filter(x=>x.branch===b.id);return[b.name,bills.length,'₹'+fmt(bills.reduce((s,x)=>s+Number(x.total||0),0)),'₹'+fmt(bills.reduce((s,x)=>s+Number(x.profit||0),0))];})});}
+  else if(type==='supplier'){const[s,i]=await Promise.all([DB.get('suppliers'),DB.get('inventory')]);doc.autoTable({startY:32,head:[['Supplier','GST','Stock Count','Outstanding','Paid']],body:s.map(x=>[x.name,x.gst||'',i.filter(v=>v.supplier===x.id).length,'₹'+fmt(x.outstanding),'₹'+fmt(x.paid||0)]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  else if(type==='profit'){const b=await DB.get('bills');doc.autoTable({startY:32,head:[['Bill#','Customer','Vehicle','Total','Profit','Date']],body:b.map(x=>['#'+x.billNo,x.customerName,x.vehicleName,'₹'+fmt(x.total),'₹'+fmt(x.profit),x.date]),styles:{fontSize:9},headStyles:{fillColor:[99,102,241]}});}
+  doc.save('VeloDesk_'+type+'_'+dt.replace(/\//g,'-')+'.pdf');showToast('Report downloaded!');
+};
+
+// ── Helpers ──
+function fillDl(id,arr){const dl=$(id);if(dl)dl.innerHTML=(arr||[]).map(v=>'<option value="'+v+'">').join('');}
+
+// ── Seed Local Data ──
+function seedLocalData(){
+  if(localStorage.getItem('vd_seeded_v3'))return;
+  const uid=()=>'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+  const s=(k,v)=>localStorage.setItem('vd_'+k,JSON.stringify(v));
+  s('branches',[{id:'br1',name:'Branch 1 - Main',address:'Main Road',manager:'Admin',phone:'9000000001'},{id:'br2',name:'Branch 2 - North',address:'North Area',manager:'Staff A',phone:'9000000002'},{id:'br3',name:'Branch 3 - South',address:'South Area',manager:'Staff B',phone:'9000000003'}]);
+  s('users',[{id:'u1',username:'admin',password:'admin123',role:'admin',branch:null},{id:'u2',username:'staff1',password:'staff123',role:'staff',branch:'br1'}]);
+  s('suppliers',[{id:'sp1',name:'Honda Motors Ltd',mobile:'9111111111',address:'Industrial Area',gst:'29ABCDE1234F1Z5',outstanding:65000,paid:0},{id:'sp2',name:'Hero Moto Corp',mobile:'9222222222',address:'North Zone',gst:'29FGHIJ5678K2Z3',outstanding:68000,paid:0}]);
+  const t=new Date().toISOString().slice(0,10);
+  s('inventory',[{id:uid(),brand:'Honda',model:'Activa 6G',color:'Pearl Black',chassis:'ME4JF508XL7012301',engine:'JF50ETBL012301',supplier:'sp1',purchase:65000,status:'In Stock',date:t},{id:uid(),brand:'Hero',model:'Splendor Plus',color:'Black',chassis:'MBLHA10EUKM123456',engine:'HA10EUKM123456',supplier:'sp2',purchase:68000,status:'In Stock',date:t},{id:uid(),brand:'TVS',model:'Jupiter',color:'White',chassis:'MD621BJ52P2C12345',engine:'2P2C12345',supplier:'',purchase:74000,status:'In Stock',date:t}]);
+  s('customers',[{id:uid(),name:'Rajesh Kumar',mobile:'9876543210',email:'rajesh@email.com',address:'MG Road',brand:'Honda',model:'Activa 6G',variant:'STD',color:'Black',notes:'Wants EMI',stage:'3',followup:t,branch:'br1',createdAt:new Date().toISOString(),history:[{date:new Date().toISOString(),action:'Lead Created',by:'admin'}]},{id:uid(),name:'Priya Sharma',mobile:'9876543211',email:'',address:'Park St',brand:'TVS',model:'Jupiter',variant:'',color:'White',notes:'',stage:'2',followup:'',branch:'br2',createdAt:new Date().toISOString(),history:[{date:new Date().toISOString(),action:'Lead Created',by:'admin'}]}]);
+  s('accounts',[{id:uid(),date:t,type:'income',category:'Customer Payment',desc:'Opening balance',amount:100000,branch:'br1',by:'admin'},{id:uid(),date:t,type:'expense',category:'Rent',desc:'Monthly rent',amount:25000,branch:'br1',by:'admin'}]);
+  s('staff',[{id:'st1',name:'Amit Singh',mobile:'9000000010',designation:'Sales Executive',branch:'br1',salary:18000,joining:'2023-01-15',notes:'Good performer'},{id:'st2',name:'Sunita Devi',mobile:'9000000011',designation:'Accountant',branch:'br1',salary:20000,joining:'2022-06-01',notes:''}]);
+  s('bills',[]);
+  localStorage.setItem('vd_s_brands',JSON.stringify(['Honda','Hero','TVS','Bajaj','Royal Enfield','Yamaha','Suzuki','KTM']));
+  localStorage.setItem('vd_s_models',JSON.stringify(['Activa 6G','Shine','Splendor Plus','Apache RTR 160','Jupiter','Pulsar NS200','Classic 350','FZ-S','R15 V4','Duke 390']));
+  localStorage.setItem('vd_s_financeBy',JSON.stringify(['HDFC Bank','SBI','ICICI Bank','Bajaj Finance','Hero FinCorp','TVS Credit']));
+  localStorage.setItem('vd_s_expenseCategories',JSON.stringify(['Rent','Electricity Bill','Internet / Telephone','Transport','Liaison Charges','Accessories Supplier','RTO','Salary','Donation','Others']));
+  localStorage.setItem('vd_s_banks',JSON.stringify(['SBI Current','HDFC Current']));
+  localStorage.setItem('vd_seeded_v3','1');
+}
+</script>
+</body>
+</html>
