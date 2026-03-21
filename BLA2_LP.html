@@ -183,22 +183,6 @@ body.ta .il [data-ta]{display:inline}
 .wp-btns{display:flex;flex-direction:column;gap:10px}
 .wp-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);color:#00ff88;padding:4px 12px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
 
-/* ── DEMO IFRAME MODAL ─────────────────────── */
-.dm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
-.dm-overlay.open{display:flex}
-.dm-inner{width:100%;max-width:900px;height:90vh;max-height:680px;background:#0a0f1e;border:1px solid rgba(0,255,136,.2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;animation:popIn .35s cubic-bezier(.23,1,.32,1)}
-.dm-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,255,136,.06);border-bottom:1px solid rgba(0,255,136,.1);flex-shrink:0}
-.dm-bar-title{font-size:12px;font-weight:700;color:#00ff88;display:flex;align-items:center;gap:8px}
-.dm-bar-dots{display:flex;gap:5px}
-.dm-dot{width:9px;height:9px;border-radius:50%}
-.dm-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;transition:color .2s;font-family:inherit}
-.dm-close:hover{color:#fff}
-.dm-iframe{flex:1;border:none;width:100%;background:#fff}
-.dm-loading{display:flex;align-items:center;justify-content:center;flex:1;color:rgba(255,255,255,.4);font-size:13px;flex-direction:column;gap:12px}
-.dm-spinner{width:32px;height:32px;border:2px solid rgba(0,255,136,.2);border-top-color:#00ff88;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.dm-open-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:rgba(0,255,136,.6);border:1px solid rgba(0,255,136,.2);padding:6px 12px;border-radius:5px;text-decoration:none;transition:all .2s}
-.dm-open-btn:hover{color:#00ff88;border-color:#00ff88}
 </style>
 </head>
 <body>
@@ -222,33 +206,6 @@ body.ta .il [data-ta]{display:inline}
       <button onclick="closeWelcome()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:4px;font-family:inherit" data-en>Skip for now →</button>
       <button onclick="closeWelcome()" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:12px;cursor:pointer;padding:4px;font-family:inherit" data-ta>தவிர்க்கவும் →</button>
     </div>
-  </div>
-</div>
-
-<!-- ══ DEMO IFRAME MODAL ══ -->
-<div class="dm-overlay" id="demoModal">
-  <div class="dm-inner">
-    <div class="dm-bar">
-      <div class="dm-bar-dots">
-        <div class="dm-dot" style="background:#ff5f57"></div>
-        <div class="dm-dot" style="background:#febc2e"></div>
-        <div class="dm-dot" style="background:#28c840"></div>
-      </div>
-      <div class="dm-bar-title">
-        <span>📊</span>
-        <span data-en>VoterExcel Dashboard — Live Demo</span>
-        <span data-ta>VoterExcel டாஷ்போர்டு — லைவ் டெமோ</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <a href="https://digimafia.github.io/AImaster/Voter_Dash.html" target="_blank" class="dm-open-btn" title="Open in new tab">↗ <span data-en>Open Tab</span><span data-ta>புதிய தாள்</span></a>
-        <button class="dm-close" onclick="closeDemo()">✕</button>
-      </div>
-    </div>
-    <div id="demoLoading" class="dm-loading">
-      <div class="dm-spinner"></div>
-      <span data-en>Loading dashboard...</span><span data-ta>டாஷ்போர்டு ஏற்றுகிறது...</span>
-    </div>
-    <iframe id="demoFrame" class="dm-iframe" style="display:none" src="" onload="iframeLoaded()" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
   </div>
 </div>
 
@@ -629,33 +586,11 @@ setTimeout(()=>{
 
 /* ── DEMO MODAL ── */
 function openDemo(){
-  const modal=document.getElementById('demoModal');
-  const frame=document.getElementById('demoFrame');
-  const loading=document.getElementById('demoLoading');
-  modal.classList.add('open');
-  document.body.style.overflow='hidden';
-  // lazy-load iframe
-  if(!frame.src||frame.src==='about:blank'||frame.src===''){
-    loading.style.display='flex';
-    frame.style.display='none';
-    frame.src='https://digimafia.github.io/AImaster/Voter_Dash.html';
-  }
+  window.open('https://digimafia.github.io/AImaster/Voter_Dash.html','_blank');
 }
-function closeDemo(){
-  document.getElementById('demoModal').classList.remove('open');
-  document.body.style.overflow='';
-}
-function iframeLoaded(){
-  document.getElementById('demoLoading').style.display='none';
-  document.getElementById('demoFrame').style.display='block';
-}
-// Close demo on overlay click
-document.getElementById('demoModal').addEventListener('click',function(e){
-  if(e.target===this) closeDemo();
-});
-// ESC closes modals
+// ESC closes welcome popup only
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeDemo();const wp=document.getElementById('wpOverlay');if(wp)closeWelcome();}
+  if(e.key==='Escape'){const wp=document.getElementById('wpOverlay');if(wp)closeWelcome();}
 });
 
 /* ── BILL TOTAL HELPER ── */
