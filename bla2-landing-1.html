@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLA 2.0 – Voter List Excel Conversion Service</title>
+<meta property="og:title" content="BLA 2.0 – வாக்காளர் பட்டியல் Excel மாற்றி">
+<meta property="og:description" content="உங்கள் பூத் வாக்காளர் பட்டியலை Excel வடிவில் மாற்றுங்கள் – வெறும் ₹1/வாக்காளர்">
+<meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhuJpB5wWtbmWysZZZMgM4wQ19g4X_7wvWh5HHMZtcXfu2fBqNmP8VfqLt5AcvhE7RMpuwJOEcAaKnrni3h9feVft82kk5hCVz6JiJDyiTrogoY8ofHRRVOi8F1a24VL7EEDXMYQqK61eyVu24ykq2YJ1CG11haeGle86zPer06k5qrzpPohwGvkVhFoahl/s16000/BLA2.0%20Dashboard.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700;900&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-deep: #050f2c;
+    --blue-mid: #0a2a6c;
+    --blue-brand: #0b5ed7;
+    --blue-light: #3b82f6;
+    --neon: #38bdf8;
+    --neon2: #06b6d4;
+    --gold: #fbbf24;
+    --green: #22c55e;
+    --white: #ffffff;
+    --glass: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,255,255,0.15);
+    --glow: 0 0 40px rgba(59,130,246,0.5);
+    --glow-strong: 0 0 80px rgba(59,130,246,0.7);
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--blue-deep);
+    color: var(--white);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ─── CANVAS BG ─── */
+  #bg-canvas {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .page-wrap { position: relative; z-index: 1; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(5,15,44,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(59,130,246,0.2);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo .badge {
+    background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    color: #fff; font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 15px; padding: 5px 12px; border-radius: 8px;
+    letter-spacing: 1px;
+  }
+  .nav-logo span { font-size: 13px; opacity: 0.6; }
+  .nav-cta {
+    background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    color: #fff; border: none; padding: 10px 22px;
+    border-radius: 50px; font-weight: 600; font-size: 14px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 0 20px rgba(56,189,248,0.4);
+    transition: all .3s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 0 35px rgba(56,189,248,0.7); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-60%);
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(11,94,215,0.35) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%,100% { transform: translate(-50%,-60%) scale(1); opacity:.7; }
+    50% { transform: translate(-50%,-60%) scale(1.15); opacity:1; }
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.35);
+    padding: 6px 16px; border-radius: 50px; font-size: 13px;
+    color: var(--neon); letter-spacing: 2px; font-weight: 600;
+    margin-bottom: 28px; text-transform: uppercase;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-headline {
+    font-family: 'Noto Sans Tamil', sans-serif;
+    font-size: clamp(28px, 5.5vw, 62px);
+    font-weight: 900; line-height: 1.25;
+    background: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #38bdf8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+    animation: fadeUp 0.7s 0.1s ease both;
+    max-width: 850px;
+  }
+  .hero-sub {
+    font-size: clamp(14px,2vw,20px); color: rgba(255,255,255,0.7);
+    margin-bottom: 40px; letter-spacing: 1px;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .hero-sub span { color: var(--neon); font-weight: 600; }
+  .hero-btns {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    color: #fff; padding: 15px 36px; border-radius: 50px;
+    font-weight: 700; font-size: 16px; border: none; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 0 30px rgba(56,189,248,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all .3s;
+    animation: pulseShadow 2.5s ease-in-out infinite;
+  }
+  @keyframes pulseShadow {
+    0%,100% { box-shadow: 0 0 30px rgba(56,189,248,0.5); }
+    50% { box-shadow: 0 0 60px rgba(56,189,248,0.9), 0 0 100px rgba(11,94,215,0.4); }
+  }
+  .btn-primary:hover { transform: translateY(-3px) scale(1.03); }
+  .btn-secondary {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    color: #fff; padding: 15px 30px; border-radius: 50px;
+    font-weight: 600; font-size: 15px; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    backdrop-filter: blur(10px); transition: all .3s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+
+  /* hero grid bottom */
+  .hero-badges {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    margin-top: 48px;
+    animation: fadeUp 0.7s 0.4s ease both;
+  }
+  .hero-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 18px; border-radius: 50px; font-size: 13px; color: rgba(255,255,255,0.75);
+  }
+  .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 8px var(--green); animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ─── SECTION GENERIC ─── */
+  section { padding: 80px 24px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    text-align: center; font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--neon); font-weight: 600; margin-bottom: 12px;
+  }
+  .section-title {
+    text-align: center; font-family: 'Syne', sans-serif;
+    font-size: clamp(24px,4vw,42px); font-weight: 800;
+    background: linear-gradient(135deg,#fff,#93c5fd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 12px;
+  }
+  .section-title-tamil {
+    font-family: 'Noto Sans Tamil', sans-serif;
+    font-size: clamp(20px,3vw,34px); font-weight: 700;
+  }
+  .section-sub {
+    text-align: center; color: rgba(255,255,255,0.55); font-size: 15px; margin-bottom: 56px;
+  }
+
+  /* ─── PRICING ─── */
+  .pricing-wrap {
+    display: flex; justify-content: center; align-items: center;
+  }
+  .price-card {
+    background: linear-gradient(135deg, rgba(11,94,215,0.2), rgba(56,189,248,0.1));
+    border: 1px solid rgba(56,189,248,0.4);
+    border-radius: 28px; padding: 48px 52px;
+    text-align: center; max-width: 420px; width: 100%;
+    backdrop-filter: blur(24px);
+    box-shadow: 0 0 80px rgba(11,94,215,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+    position: relative; overflow: hidden;
+    transition: transform .3s;
+  }
+  .price-card:hover { transform: scale(1.03); }
+  .price-card::before {
+    content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background: conic-gradient(from 180deg, transparent 60%, rgba(56,189,248,0.12) 65%, transparent 70%);
+    animation: spin 6s linear infinite; pointer-events:none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .price-tag-label {
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--neon); font-weight: 700; margin-bottom: 4px;
+  }
+  .price-unit {
+    font-family: 'Syne', sans-serif; font-size: 18px; color: rgba(255,255,255,0.6);
+    margin-bottom: 6px;
+  }
+  .price-amount {
+    font-family: 'Syne', sans-serif; font-size: 90px; font-weight: 800; line-height: 1;
+    background: linear-gradient(135deg,#fbbf24,#f97316);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: pulsePrize 2s ease-in-out infinite;
+  }
+  @keyframes pulsePrize {
+    0%,100% { filter: drop-shadow(0 0 12px rgba(251,191,36,0.5)); }
+    50% { filter: drop-shadow(0 0 28px rgba(251,191,36,0.9)); }
+  }
+  .price-currency {
+    font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800;
+    background: linear-gradient(135deg,#fbbf24,#f97316);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; vertical-align: super;
+  }
+  .price-badge {
+    display: inline-block; background: linear-gradient(135deg,#ef4444,#dc2626);
+    color: #fff; font-size: 12px; font-weight: 700; padding: 4px 14px;
+    border-radius: 50px; margin-top: 12px; letter-spacing: 2px; text-transform: uppercase;
+    box-shadow: 0 0 20px rgba(239,68,68,0.5);
+    animation: pulseShadow 2s infinite;
+  }
+  .price-features { margin: 24px 0; list-style: none; text-align: left; }
+  .price-features li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; color: rgba(255,255,255,0.8); font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .price-features li:last-child { border-bottom: none; }
+  .price-features li .check {
+    width: 20px; height: 20px; background: rgba(34,197,94,0.2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; color: var(--green);
+    box-shadow: 0 0 8px rgba(34,197,94,0.4);
+  }
+
+  /* ─── FEATURES ─── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .feat-card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 32px 28px;
+    backdrop-filter: blur(16px);
+    transition: all .3s;
+    position: relative; overflow: hidden;
+  }
+  .feat-card::after {
+    content:''; position:absolute; inset:0; border-radius:20px;
+    background: linear-gradient(135deg,rgba(56,189,248,0.05),transparent);
+    opacity:0; transition:.3s;
+  }
+  .feat-card:hover { transform: translateY(-6px); border-color: rgba(56,189,248,0.4);
+    box-shadow: 0 20px 60px rgba(11,94,215,0.3); }
+  .feat-card:hover::after { opacity:1; }
+  .feat-icon {
+    width: 52px; height: 52px; border-radius: 14px; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .feat-icon.blue { background: rgba(59,130,246,0.2); box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+  .feat-icon.gold { background: rgba(251,191,36,0.2); box-shadow: 0 0 20px rgba(251,191,36,0.3); }
+  .feat-icon.green { background: rgba(34,197,94,0.2); box-shadow: 0 0 20px rgba(34,197,94,0.3); }
+  .feat-title {
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .feat-title-tamil {
+    font-family: 'Noto Sans Tamil', sans-serif; font-size: 16px;
+    color: var(--neon); margin-bottom: 6px;
+  }
+  .feat-desc { color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.6; }
+
+  /* ─── HOW IT WORKS ─── */
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap: 20px; position: relative;
+  }
+  .step-card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 28px 24px; text-align: center;
+    backdrop-filter: blur(16px); transition: all .3s;
+  }
+  .step-card:hover { transform: translateY(-4px); border-color: rgba(56,189,248,0.35); }
+  .step-num {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne',sans-serif; font-weight: 800; font-size: 18px;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 20px rgba(56,189,248,0.4);
+  }
+  .step-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+  /* ─── ORDER FORM ─── */
+  .form-wrap { display: flex; justify-content: center; }
+  .form-card {
+    background: linear-gradient(135deg, rgba(11,94,215,0.15), rgba(56,189,248,0.08));
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 28px; padding: 48px 44px;
+    width: 100%; max-width: 560px;
+    backdrop-filter: blur(24px);
+    box-shadow: 0 0 80px rgba(11,94,215,0.2);
+  }
+  .form-title {
+    font-family: 'Syne',sans-serif; font-size: 26px; font-weight: 800;
+    text-align: center; margin-bottom: 6px;
+  }
+  .form-title-tamil {
+    font-family: 'Noto Sans Tamil',sans-serif; font-size: 18px;
+    text-align: center; color: var(--neon); margin-bottom: 28px;
+  }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.7); margin-bottom: 7px; letter-spacing: 0.5px;
+  }
+  .form-group input, .form-group select {
+    width: 100%; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
+    padding: 13px 16px; color: #fff; font-size: 15px; font-family: 'DM Sans',sans-serif;
+    outline: none; transition: all .3s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: rgba(56,189,248,0.6);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    background: rgba(255,255,255,0.1);
+  }
+  .form-group input::placeholder { color: rgba(255,255,255,0.35); }
+  .file-drop {
+    width: 100%; border: 2px dashed rgba(56,189,248,0.4);
+    border-radius: 14px; padding: 20px; text-align: center;
+    cursor: pointer; transition: all .3s; background: rgba(56,189,248,0.04);
+    color: rgba(255,255,255,0.55); font-size: 14px;
+  }
+  .file-drop:hover { border-color: var(--neon); background: rgba(56,189,248,0.08); }
+  .file-drop input { display: none; }
+  .file-icon { font-size: 28px; margin-bottom: 6px; }
+  .upi-box {
+    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3);
+    border-radius: 14px; padding: 14px 18px; margin-bottom: 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .upi-box .label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
+  .upi-box .upi-id {
+    font-family: 'Syne',sans-serif; font-weight: 700; font-size: 16px;
+    color: var(--gold); letter-spacing: 0.5px;
+  }
+  .copy-btn {
+    background: rgba(251,191,36,0.2); border: 1px solid rgba(251,191,36,0.4);
+    color: var(--gold); padding: 6px 14px; border-radius: 8px; font-size: 13px;
+    cursor: pointer; transition: all .2s; font-weight: 600; white-space: nowrap;
+  }
+  .copy-btn:hover { background: rgba(251,191,36,0.3); }
+  .submit-btn {
+    width: 100%; background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    color: #fff; border: none; padding: 16px; border-radius: 14px;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 0 30px rgba(56,189,248,0.4);
+    transition: all .3s; margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    animation: pulseShadow 2.5s infinite;
+  }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(56,189,248,0.7); }
+  .trust-line {
+    text-align: center; font-size: 12px; color: rgba(255,255,255,0.4);
+    margin-top: 12px; letter-spacing: 1px;
+  }
+  .trust-line span { color: var(--green); }
+
+  /* ─── TESTIMONIALS ─── */
+  .testi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: 22px;
+  }
+  .testi-card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 28px 24px;
+    backdrop-filter: blur(16px); transition: all .3s;
+  }
+  .testi-card:hover { transform: translateY(-4px); border-color: rgba(56,189,248,0.3); }
+  .testi-stars { color: var(--gold); font-size: 16px; margin-bottom: 12px; }
+  .testi-text {
+    font-family: 'Noto Sans Tamil',sans-serif; font-size: 14px;
+    color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 16px;
+  }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg,#0b5ed7,#38bdf8);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(56,189,248,0.4);
+  }
+  .testi-name { font-weight: 700; font-size: 14px; }
+  .testi-role { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+  /* ─── STATS ─── */
+  .stats-row {
+    display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;
+    margin-bottom: 60px;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Syne',sans-serif; font-size: 44px; font-weight: 800;
+    background: linear-gradient(135deg,#38bdf8,#818cf8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+  /* ─── CTA SECTION ─── */
+  .cta-section {
+    background: linear-gradient(135deg,rgba(11,94,215,0.25),rgba(56,189,248,0.1));
+    border: 1px solid rgba(56,189,248,0.25); border-radius: 28px;
+    padding: 64px 40px; text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content:''; position:absolute; top:-100px; left:50%; transform:translateX(-50%);
+    width:500px; height:500px; border-radius:50%;
+    background: radial-gradient(circle,rgba(56,189,248,0.15),transparent 70%);
+    pointer-events:none;
+  }
+  .cta-headline {
+    font-family:'Noto Sans Tamil',sans-serif;
+    font-size: clamp(22px,4vw,42px); font-weight: 900;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg,#fff,#93c5fd);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  }
+  .cta-sub { color: rgba(255,255,255,0.6); margin-bottom: 32px; font-size: 16px; }
+  .cta-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    text-align: center; padding: 32px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.35); font-size: 13px;
+  }
+  footer a { color: var(--neon); text-decoration: none; }
+
+  /* ─── WHATSAPP FAB ─── */
+  .wa-fab {
+    position: fixed; bottom: 28px; right: 24px; z-index: 999;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg,#25d366,#128c7e);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(37,211,102,0.5);
+    text-decoration: none; font-size: 26px;
+    animation: floatWA 3s ease-in-out infinite;
+    transition: transform .2s;
+  }
+  .wa-fab:hover { transform: scale(1.1); }
+  @keyframes floatWA {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .wa-fab-label {
+    position: fixed; bottom: 42px; right: 90px; z-index: 999;
+    background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.4);
+    color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; white-space: nowrap;
+    backdrop-filter: blur(10px);
+    animation: floatWA 3s ease-in-out infinite;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px; background: linear-gradient(90deg,transparent,rgba(56,189,248,0.3),transparent);
+    margin: 0 24px;
+  }
+
+  /* ─── SPARKLE ─── */
+  .sparkle {
+    position: absolute; width: 4px; height: 4px;
+    background: #fff; border-radius: 50%;
+    animation: sparkleAnim var(--dur,3s) var(--delay,0s) ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes sparkleAnim {
+    0% { opacity:0; transform:scale(0) rotate(0); }
+    50% { opacity:1; transform:scale(1) rotate(180deg); }
+    100% { opacity:0; transform:scale(0) rotate(360deg); }
+  }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+
+  /* ─── MOBILE ─── */
+  @media(max-width:640px) {
+    .form-card { padding: 30px 20px; }
+    .price-card { padding: 36px 28px; }
+    .price-amount { font-size: 72px; }
+    .cta-section { padding: 44px 20px; }
+    nav { padding: 12px 16px; }
+    .nav-logo span { display:none; }
+    .wa-fab-label { display:none; }
+  }
+
+  /* Tamil map SVG glow */
+  .tn-map-wrap {
+    position: absolute; right: -30px; top: 50%; transform: translateY(-50%);
+    width: 220px; opacity: 0.12; pointer-events: none;
+    animation: mapPulse 4s ease-in-out infinite;
+  }
+  @media(max-width:900px) { .tn-map-wrap { display:none; } }
+  @keyframes mapPulse {
+    0%,100% { opacity:0.1; } 50% { opacity:0.18; }
+  }
+
+  /* Lightning icons */
+  .lightning {
+    position: absolute; font-size: 22px;
+    animation: lightFloat var(--d,3s) var(--dl,0s) ease-in-out infinite;
+    opacity: 0.7;
+  }
+  @keyframes lightFloat {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.1); }
+  }
+  .lp-1 { top: 10%; left: 8%; --d:3.5s; --dl:0s; }
+  .lp-2 { top: 18%; right: 10%; --d:2.8s; --dl:0.5s; }
+  .lp-3 { bottom: 30%; left: 5%; --d:4s; --dl:1s; }
+  .lp-4 { bottom: 25%; right: 6%; --d:3.2s; --dl:1.5s; }
+  .lp-5 { top: 45%; left: 12%; --d:3.8s; --dl:0.7s; }
+  .lp-6 { top: 40%; right: 14%; --d:2.5s; --dl:0.3s; }
+
+  .excel-float {
+    font-size: 64px;
+    animation: excelFloat 4s ease-in-out infinite;
+    margin: 24px auto; display: block; line-height: 1;
+    filter: drop-shadow(0 0 20px rgba(56,189,248,0.5));
+  }
+  @keyframes excelFloat {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+
+  .ribbon {
+    position: absolute; top: -1px; right: 20px;
+    background: linear-gradient(135deg,#ef4444,#b91c1c);
+    color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 6px 14px 20px; clip-path: polygon(0 0,100% 0,100% 80%,50% 100%,0 80%);
+    text-transform: uppercase;
+  }
+
+  select option { background: #0a2a6c; color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ANIMATED BG CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- WHATSAPP FAB -->
+<span class="wa-fab-label">📞 Chat on WhatsApp</span>
+<a href="https://wa.me/918667491936?text=Hi%2C%20I%20want%20to%20order%20Voter%20List%20Excel%20Conversion" class="wa-fab" target="_blank">💬</a>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="badge">BLA 2.0</span>
+    <span>Voter Excel Service</span>
+  </div>
+  <a href="#order" class="nav-cta">🚀 Order Now</a>
+</nav>
+
+<div class="page-wrap">
+
+<!-- ════════════════════════════ HERO ════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-glow"></div>
+
+  <!-- lightning -->
+  <span class="lightning lp-1">⚡</span>
+  <span class="lightning lp-2">⚡</span>
+  <span class="lightning lp-3">⚡</span>
+  <span class="lightning lp-4">⚡</span>
+  <span class="lightning lp-5">⚡</span>
+  <span class="lightning lp-6">⚡</span>
+
+  <!-- Tamil Nadu map outline -->
+  <div class="tn-map-wrap">
+    <svg viewBox="0 0 300 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M150,10 L220,40 L260,90 L280,160 L270,230 L250,290 L220,360 L190,410 L165,450 L150,490 L135,450 L110,410 L80,360 L50,290 L30,230 L20,160 L40,90 L80,40 Z"
+        stroke="#38bdf8" stroke-width="3" fill="rgba(56,189,248,0.08)"/>
+      <circle cx="150" cy="200" r="8" fill="#38bdf8" opacity="0.8"/>
+      <circle cx="120" cy="280" r="5" fill="#38bdf8" opacity="0.6"/>
+      <circle cx="180" cy="320" r="5" fill="#38bdf8" opacity="0.6"/>
+      <circle cx="100" cy="180" r="4" fill="#38bdf8" opacity="0.5"/>
+      <circle cx="200" cy="160" r="4" fill="#38bdf8" opacity="0.5"/>
+    </svg>
+  </div>
+
+  <div class="hero-eyebrow">
+    <span class="dot"></span>
+    BLA 2.0 App &nbsp;·&nbsp; Official Service &nbsp;·&nbsp; Tamil Nadu
+  </div>
+
+  <div class="excel-float">📊</div>
+
+  <h1 class="hero-headline">
+    உங்கள் பூத் வாக்காளர் பட்டியலை<br>Excel வடிவில் மாற்றுங்கள்
+  </h1>
+
+  <p class="hero-sub">
+    <span>Fast</span> &nbsp;•&nbsp; <span>Accurate</span> &nbsp;•&nbsp; <span>Ready-to-use Data</span>
+  </p>
+
+  <div class="hero-btns">
+    <a href="#order" class="btn-primary">🚀 Order Now — ₹1/வாக்காளர்</a>
+    <a href="https://digimafia.github.io/AImaster/Voter_Dash.html" target="_blank" class="btn-secondary">📊 View Dashboard</a>
+  </div>
+
+  <div class="hero-badges">
+    <div class="hero-badge"><span class="dot"></span> PDF to Excel</div>
+    <div class="hero-badge"><span class="dot"></span> 100% Accuracy</div>
+    <div class="hero-badge"><span class="dot"></span> Bulk Orders</div>
+    <div class="hero-badge"><span class="dot"></span> Fast Delivery</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ STATS ════════════════════════════ -->
+<section style="padding:60px 24px;">
+  <div class="container">
+    <div class="stats-row reveal">
+      <div class="stat-item">
+        <div class="stat-num">100+</div>
+        <div class="stat-label">Agents Trusted Us</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">50K+</div>
+        <div class="stat-label">Voters Processed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">₹1</div>
+        <div class="stat-label">Per Voter Only</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">24hr</div>
+        <div class="stat-label">Delivery Time</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ PRICING ════════════════════════════ -->
+<section id="pricing">
+  <div class="container">
+    <p class="section-label">💰 Pricing</p>
+    <h2 class="section-title">Simple, Transparent Pricing</h2>
+    <p class="section-sub" style="font-family:'Noto Sans Tamil',sans-serif;">மிகவும் குறைந்த விலையில் தரமான சேவை</p>
+
+    <div class="pricing-wrap reveal">
+      <div class="price-card">
+        <div class="ribbon">LIMITED</div>
+        <div class="price-tag-label">PER VOTER</div>
+        <div class="price-unit">Only</div>
+        <div>
+          <span class="price-currency">₹</span><span class="price-amount">1</span>
+        </div>
+        <div class="price-badge">🔥 LIMITED OFFER</div>
+
+        <ul class="price-features">
+          <li><span class="check">✓</span> PDF → Structured Excel File</li>
+          <li><span class="check">✓</span> Name, Age, Gender, Booth columns</li>
+          <li><span class="check">✓</span> All Tamil Booths Supported</li>
+          <li><span class="check">✓</span> Bulk Processing Available</li>
+          <li><span class="check">✓</span> 100% Data Accuracy</li>
+          <li><span class="check">✓</span> Delivered in 24 Hours</li>
+        </ul>
+
+        <a href="#order" class="btn-primary" style="display:flex;justify-content:center;">
+          🛒 Order Now
+        </a>
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.4);">
+          No hidden charges · Pay after satisfied
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ FEATURES ════════════════════════════ -->
+<section id="features">
+  <div class="container">
+    <p class="section-label">⚡ Features</p>
+    <h2 class="section-title">Why Choose BLA 2.0?</h2>
+    <p class="section-sub" style="font-family:'Noto Sans Tamil',sans-serif;">ஏன் எங்கள் சேவையை தேர்வு செய்ய வேண்டும்?</p>
+
+    <div class="features-grid reveal">
+      <div class="feat-card">
+        <div class="feat-icon blue">⚡</div>
+        <div class="feat-title-tamil">விரைவான டெலிவரி</div>
+        <div class="feat-title">Fast Delivery</div>
+        <div class="feat-desc">Order placed today — Excel file delivered within 24 hours. Perfect for last-minute campaign prep.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon gold">💰</div>
+        <div class="feat-title-tamil">மலிவான கட்டணம்</div>
+        <div class="feat-title">Affordable Cost</div>
+        <div class="feat-desc">Industry's lowest rate — just ₹1 per voter. Bulk orders get priority processing at no extra cost.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon green">📊</div>
+        <div class="feat-title-tamil">சுத்தமான Excel வடிவம்</div>
+        <div class="feat-title">Clean Excel Format</div>
+        <div class="feat-desc">Structured columns: Voter Name, Age, Gender, Address, Booth Number — ready to filter, sort & analyse.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ HOW IT WORKS ════════════════════════════ -->
+<section id="how">
+  <div class="container">
+    <p class="section-label">🔄 Process</p>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub" style="font-family:'Noto Sans Tamil',sans-serif;">எவ்வாறு வேலை செய்கிறது?</p>
+
+    <div class="steps-grid reveal">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-title">Upload PDF</div>
+        <div class="step-desc" style="font-family:'Noto Sans Tamil',sans-serif;font-size:12px;">உங்கள் வாக்காளர் பட்டியல் PDF ஐ அப்லோட் செய்யுங்கள்</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-title">Make Payment</div>
+        <div class="step-desc" style="font-family:'Noto Sans Tamil',sans-serif;font-size:12px;">UPI மூலம் கட்டணம் செலுத்துங்கள் — screenshot அனுப்புங்கள்</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-title">We Process</div>
+        <div class="step-desc" style="font-family:'Noto Sans Tamil',sans-serif;font-size:12px;">24 மணி நேரத்தில் Excel கோப்பு தயாராகும்</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-title">Receive Excel</div>
+        <div class="step-desc" style="font-family:'Noto Sans Tamil',sans-serif;font-size:12px;">WhatsApp அல்லது email மூலம் Excel பெறுங்கள்</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ ORDER FORM ════════════════════════════ -->
+<section id="order">
+  <div class="container">
+    <p class="section-label">📝 Order</p>
+    <h2 class="section-title">Place Your Order</h2>
+    <p class="section-sub" style="font-family:'Noto Sans Tamil',sans-serif;">இப்போதே ஆர்டர் கொடுங்கள் — 24 மணி நேரத்தில் Excel கிடைக்கும்</p>
+
+    <div class="form-wrap reveal">
+      <div class="form-card">
+        <div class="form-title">🚀 Order Form</div>
+        <div class="form-title-tamil">வாக்காளர் பட்டியல் மாற்று சேவை</div>
+
+        <!-- UPI Payment Box -->
+        <div class="upi-box">
+          <div>
+            <div class="label">💳 Pay via UPI</div>
+            <div class="upi-id" id="upi-id">sherifthe6-1@okaxis</div>
+          </div>
+          <button class="copy-btn" onclick="copyUPI()">📋 Copy</button>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:18px;text-align:center;">
+          Pay first → Upload screenshot below → Submit order
+        </div>
+
+        <div class="form-group">
+          <label>👤 Your Name / உங்கள் பெயர்</label>
+          <input type="text" id="f-name" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label>📱 WhatsApp Number / மொபைல் நம்பர்</label>
+          <input type="tel" id="f-phone" placeholder="9XXXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>🗳️ Booth / Constituency Name</label>
+          <input type="text" id="f-booth" placeholder="e.g. Ward 12 – Chennai North">
+        </div>
+        <div class="form-group">
+          <label>📄 Upload PDF / PDF கோப்பு</label>
+          <label class="file-drop" id="pdf-drop">
+            <input type="file" id="f-pdf" accept=".pdf" onchange="updateLabel('f-pdf','pdf-drop-text')">
+            <div class="file-icon">📄</div>
+            <div id="pdf-drop-text">Click to upload Voter List PDF<br><small>Max 20MB</small></div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>💳 Payment Screenshot / கட்டண ரசீது</label>
+          <label class="file-drop" id="ss-drop">
+            <input type="file" id="f-ss" accept="image/*" onchange="updateLabel('f-ss','ss-drop-text')">
+            <div class="file-icon">🖼️</div>
+            <div id="ss-drop-text">Upload UPI payment screenshot<br><small>JPG / PNG</small></div>
+          </label>
+        </div>
+
+        <button class="submit-btn" onclick="submitOrder()">
+          🚀 Submit Order / ஆர்டர் அனுப்பு
+        </button>
+        <div class="trust-line">
+          <span>🔒 Secure</span> &nbsp;·&nbsp; <span>⚡ Fast</span> &nbsp;·&nbsp; <span>✅ Trusted by 100+ agents</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ TESTIMONIALS ════════════════════════════ -->
+<section id="testimonials">
+  <div class="container">
+    <p class="section-label">⭐ Reviews</p>
+    <h2 class="section-title">Trusted by 100+ Political Agents</h2>
+    <p class="section-sub" style="font-family:'Noto Sans Tamil',sans-serif;">100+ பூத் ஏஜெண்டுகளின் நம்பிக்கை</p>
+
+    <div class="testi-grid reveal">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">
+          "மிகவும் வேகமாக Excel கிடைத்தது. அனைத்து தகவல்களும் சரியாக இருந்தன. ₹1 விலையில் இந்த தரம் கிடைப்பது அற்புதம்!"
+        </div>
+        <div class="testi-author">
+          <div class="testi-avatar">R</div>
+          <div>
+            <div class="testi-name">Ramesh Kumar</div>
+            <div class="testi-role">Booth Agent, Chennai</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">
+          "Election campaign-க்கு data ready-ஆக வேண்டும். BLA 2.0 சேவை மிகவும் உதவியது. 24 மணி நேரத்தில் Excel கிடைத்தது!"
+        </div>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
+          <div>
+            <div class="testi-name">Selvam P</div>
+            <div class="testi-role">Campaign Manager, Coimbatore</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">
+          "Bulk order கொடுத்தேன். 5000 வாக்காளர்களின் data perfect-ஆக Excel-ல் வந்தது. Dashboard கூட மிகவும் useful!"
+        </div>
+        <div class="testi-author">
+          <div class="testi-avatar">M</div>
+          <div>
+            <div class="testi-name">Murugan V</div>
+            <div class="testi-role">District Coordinator, Madurai</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════ CTA ════════════════════════════ -->
+<section style="padding:80px 24px;">
+  <div class="container">
+    <div class="cta-section reveal">
+      <p class="section-label">🎯 Get Started</p>
+      <h2 class="cta-headline">இப்போதே ஆர்டர் கொடுங்கள்!</h2>
+      <p class="cta-sub">Don't miss this limited-time offer — ₹1 per voter. Fast. Accurate. Ready to win.</p>
+      <div class="cta-btns">
+        <a href="#order" class="btn-primary" style="font-size:18px;padding:18px 44px;">
+          🛒 SHOP NOW
+        </a>
+        <a href="https://digimafia.github.io/AImaster/Voter_Dash.html" target="_blank" class="btn-secondary" style="font-size:16px;">
+          📊 Open Dashboard
+        </a>
+      </div>
+      <div style="margin-top:24px;font-size:13px;color:rgba(255,255,255,0.35);">
+        Questions? Call/WhatsApp: <a href="tel:+918667491936" style="color:var(--neon);font-weight:700;">+91 86674 91936</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════ FOOTER ════════════════════════════ -->
+<footer>
+  <p style="margin-bottom:8px;font-size:15px;color:rgba(255,255,255,0.6);">
+    <strong style="color:#fff;">BLA 2.0</strong> — Voter List Excel Conversion Service
+  </p>
+  <p>Contact: <a href="tel:+918667491936">+91 86674 91936</a> &nbsp;|&nbsp;
+    <a href="https://wa.me/918667491936">WhatsApp</a> &nbsp;|&nbsp;
+    <a href="https://digimafia.github.io/AImaster/Voter_Dash.html" target="_blank">Dashboard</a>
+  </p>
+  <p style="margin-top:12px;font-size:11px;">© 2025 BLA 2.0 · All Rights Reserved · Made with ❤️ for Tamil Nadu</p>
+</footer>
+
+</div><!-- end page-wrap -->
+
+<!-- ════════════════════════════ SCRIPTS ════════════════════════════ -->
+<script>
+/* ─── CANVAS PARTICLES ─── */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Gradient mesh bg
+  function drawBg(){
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,'#050f2c');
+    grad.addColorStop(0.5,'#0a2a6c');
+    grad.addColorStop(1,'#050f2c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+
+    // radial centre glow
+    const rg = ctx.createRadialGradient(W/2,H*0.4,0,W/2,H*0.4,Math.min(W,H)*0.55);
+    rg.addColorStop(0,'rgba(11,94,215,0.18)');
+    rg.addColorStop(1,'transparent');
+    ctx.fillStyle = rg;
+    ctx.fillRect(0,0,W,H);
+
+    // light rays
+    for(let i=0;i<6;i++){
+      const angle = (i/6)*Math.PI*2 + Date.now()*0.0001;
+      const x = W/2 + Math.cos(angle)*W*0.6;
+      const y = H*0.4 + Math.sin(angle)*H*0.6;
+      const rayGrad = ctx.createLinearGradient(W/2,H*0.4,x,y);
+      rayGrad.addColorStop(0,'rgba(56,189,248,0.04)');
+      rayGrad.addColorStop(1,'transparent');
+      ctx.beginPath();
+      ctx.moveTo(W/2,H*0.4);
+      ctx.lineTo(x,y);
+      ctx.strokeStyle = rayGrad;
+      ctx.lineWidth = 60;
+      ctx.stroke();
+    }
+  }
+
+  // Particles
+  for(let i=0;i<80;i++){
+    particles.push({
+      x: Math.random()*1920,
+      y: Math.random()*1080,
+      r: Math.random()*2+0.5,
+      vx: (Math.random()-0.5)*0.3,
+      vy: (Math.random()-0.5)*0.3,
+      a: Math.random(),
+      da: (Math.random()-0.5)*0.008,
+      color: Math.random()>0.5 ? 'rgba(56,189,248,' : 'rgba(255,255,255,'
+    });
+  }
+
+  function drawParticles(){
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy;
+      p.a += p.da;
+      if(p.a<0||p.a>1) p.da*=-1;
+      if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+      if(p.y<0) p.y=H; if(p.y>H) p.y=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.color + Math.max(0,Math.min(1,p.a))+')';
+      ctx.fill();
+    });
+  }
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    drawBg();
+    drawParticles();
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ─── SCROLL REVEAL ─── */
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) e.target.classList.add('visible');
+  });
+},{threshold:0.12});
+reveals.forEach(r=>observer.observe(r));
+
+/* ─── COPY UPI ─── */
+function copyUPI(){
+  navigator.clipboard.writeText('sherifthe6-1@okaxis').then(()=>{
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    setTimeout(()=>btn.innerHTML=orig,2000);
+  });
+}
+
+/* ─── FILE LABEL UPDATE ─── */
+function updateLabel(inputId, labelId){
+  const inp = document.getElementById(inputId);
+  const lbl = document.getElementById(labelId);
+  if(inp.files[0]) lbl.innerHTML = '✅ ' + inp.files[0].name;
+}
+
+/* ─── SUBMIT ORDER ─── */
+function submitOrder(){
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const booth = document.getElementById('f-booth').value.trim();
+
+  if(!name||!phone){
+    alert('⚠️ Please fill in your Name and Phone number.');
+    return;
+  }
+
+  const msg = encodeURIComponent(
+    `🚀 *BLA 2.0 – New Order*\n\n` +
+    `👤 Name: ${name}\n` +
+    `📱 Phone: ${phone}\n` +
+    `🗳️ Booth: ${booth||'Not specified'}\n\n` +
+    `💳 Payment: Done via UPI (sherifthe6-1@okaxis)\n` +
+    `📄 PDF & Screenshot sent separately.\n\n` +
+    `Please process my Voter List Excel conversion. Thank you!`
+  );
+
+  window.open(`https://wa.me/918667491936?text=${msg}`, '_blank');
+}
+</script>
+</body>
+</html>
